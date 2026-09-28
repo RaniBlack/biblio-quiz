@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>檢索擂台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+  // ===== 設定：部署 Apps Script 後，把網頁應用程式網址貼在這裡 =====
+  var API_URL = 'https://script.google.com/macros/s/AKfycbwU55JRMWwaEXkJ28vTjJpkY8jh1ffi0HLLRozFNb3JCDDvcGdmNDM8U1IKGc8SteQn/exec';
+</script>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#0B2430; --bg2:#10323F; --panel:#143A48; --line:#24505F;
+  --text:#EAF3F1; --muted:#9DB7B8; --teal:#35B8AA; --gold:#F2B84B; --berry:#E0567A; --sky:#5AA7E8;
+  --ok:#4CD08A; --bad:#F07A6A;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.mono{font-family:var(--mono)}
+.hidden{display:none!important}
+.brand{font-weight:900;letter-spacing:.06em}
+.brand b{color:var(--teal)}
+.opt-a{--c:var(--teal)} .opt-b{--c:var(--gold)} .opt-c{--c:var(--berry)} .opt-d{--c:var(--sky)} .opt-e{--c:#A58AE0} .opt-f{--c:#8FBF5A}
+.btn{border:0;border-radius:12px;padding:14px 22px;font-weight:700;background:var(--teal);color:#062027}
+.btn.ghost{background:transparent;color:var(--text);border:1.5px solid var(--line)}
+.btn.warn{background:var(--berry);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* ============ HOST（投影） ============ */
+#host{min-height:100%;display:flex;flex-direction:column;padding:28px clamp(20px,4vw,56px) 24px;gap:22px}
+.h-top{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.h-top .brand{font-size:28px}
+.h-top .meta{margin-left:auto;display:flex;gap:18px;color:var(--muted);font-size:18px;font-variant-numeric:tabular-nums}
+.h-main{flex:1;display:flex;flex-direction:column;gap:22px}
+.round{display:inline-flex;gap:10px;align-items:center;font-size:18px;font-weight:700;color:var(--gold);letter-spacing:.08em}
+.round .x2{background:var(--berry);color:#fff;border-radius:6px;padding:2px 8px;font-size:15px}
+.qtext{font-size:clamp(28px,3.2vw,46px);font-weight:900;line-height:1.35;text-wrap:balance;max-width:40ch}
+.qcode{font-family:var(--mono);font-size:clamp(20px,2vw,28px);background:#061A22;border:1px solid var(--line);border-radius:12px;padding:16px 20px;line-height:1.6;overflow-x:auto}
+.qcode .blank{display:inline-block;min-width:3.2em;border-bottom:3px solid var(--gold);text-align:center;color:var(--gold)}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.opt{position:relative;display:flex;align-items:center;gap:16px;background:var(--panel);border:2px solid transparent;border-radius:14px;padding:16px 18px;min-height:74px;overflow:hidden}
+.opt .L{flex:none;width:44px;height:44px;border-radius:10px;background:var(--c);color:#062027;display:grid;place-items:center;font-weight:900;font-size:22px}
+.opt .T{font-size:clamp(18px,1.7vw,26px);font-weight:700;line-height:1.35;z-index:1}
+.opt .T .mono{font-size:.92em}
+.opt .bar{position:absolute;left:0;top:0;bottom:0;background:color-mix(in srgb,var(--c) 22%,transparent);width:0;transition:width .6s ease}
+.opt .n{margin-left:auto;font-weight:900;font-size:24px;z-index:1;font-variant-numeric:tabular-nums}
+.opts.revealed .opt:not(.right){opacity:.45}
+.opt.right{border-color:var(--ok)}
+.opt.right .n::after{content:" ✓";color:var(--ok)}
+.explain{background:#0E2A35;border-left:6px solid var(--ok);border-radius:12px;padding:16px 20px;font-size:clamp(18px,1.6vw,24px);line-height:1.6}
+.explain b{color:var(--ok)}
+.h-bottom{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.h-bottom .spacer{flex:1}
+.timer{display:flex;align-items:center;gap:14px}
+.ring{width:84px;height:84px}
+.ring circle{fill:none;stroke-width:8}
+.ring .bg{stroke:var(--line)} .ring .fg{stroke:var(--gold);stroke-linecap:round;transition:stroke-dashoffset .25s linear}
+.ring text{fill:var(--text);font:900 28px var(--sans);text-anchor:middle;dominant-baseline:central}
+.count{font-size:20px;color:var(--muted)} .count b{color:var(--text);font-size:28px}
+/* lobby */
+.lobby{display:grid;grid-template-columns:minmax(260px,380px) 1fr;gap:36px;align-items:start}
+.qrbox{background:#fff;border-radius:18px;padding:18px;display:grid;place-items:center}
+.qrbox #qr img,.qrbox #qr canvas{width:100%!important;height:auto!important}
+.joinurl{font-family:var(--mono);font-size:14px;color:var(--muted);word-break:break-all;margin-top:10px}
+.lobby h1{font-size:clamp(40px,5vw,72px);font-weight:900;margin:0;line-height:1.1}
+.lobby h1 b{color:var(--teal)}
+.lobby .sub{font-size:22px;color:var(--muted);margin-top:10px}
+.teams{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.chip{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:20px;font-weight:700;animation:pop .35s ease}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+.rules{margin-top:26px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.rule{background:var(--bg2);border-radius:12px;padding:12px 14px}
+.rule .k{font-size:13px;color:var(--gold);font-weight:700;letter-spacing:.08em}
+.rule .v{font-size:17px;font-weight:700;margin-top:4px}
+.selp{margin-top:22px;background:var(--bg2);border-radius:14px;padding:14px 16px}
+.selbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.selbar b{font-size:18px;margin-right:6px}
+.btn.sm{padding:8px 14px;font-size:15px}
+.sellist{margin-top:10px}
+.sellist summary{cursor:pointer;color:var(--muted);font-size:15px}
+.sellist[open]{max-height:360px;overflow:auto}
+.sellist fieldset{border:0;border-top:1px solid var(--line);margin:10px 0 0;padding:8px 0 0;display:flex;flex-wrap:wrap;gap:6px 16px}
+.sellist legend{color:var(--gold);font-weight:700;font-size:14px;padding:0}
+.sellist label{font-size:15px;display:flex;gap:6px;align-items:center}
+/* board */
+.board{display:flex;flex-direction:column;gap:10px;max-width:980px;width:100%;margin:0 auto}
+.brow{display:grid;grid-template-columns:64px 1fr auto;align-items:center;gap:16px;background:var(--panel);border-radius:14px;padding:14px 20px;font-size:26px;font-weight:700}
+.brow .rk{font-weight:900;color:var(--muted);font-size:28px;font-variant-numeric:tabular-nums}
+.brow .sc{font-variant-numeric:tabular-nums;font-weight:900}
+.brow.top1{background:linear-gradient(90deg,color-mix(in srgb,var(--gold) 35%,var(--panel)),var(--panel))}
+.brow.top1 .rk{color:var(--gold)}
+.brow.top2 .rk{color:#D6E2E4} .brow.top3 .rk{color:#E0A277}
+.endtitle{text-align:center;font-size:clamp(34px,4vw,56px);font-weight:900}
+.endtitle b{color:var(--gold)}
+.confirm{display:flex;gap:10px;align-items:center;background:var(--bg2);border:1px solid var(--berry);border-radius:12px;padding:10px 14px}
+@media (max-width:900px){.opts{grid-template-columns:1fr}.lobby{grid-template-columns:1fr}.rules{grid-template-columns:1fr 1fr}}
+
+/* ============ PLAYER（手機） ============ */
+#player{min-height:100%;display:flex;flex-direction:column;padding:16px 16px 20px;gap:14px;max-width:560px;margin:0 auto}
+.p-top{display:flex;align-items:center;gap:10px}
+.p-top .brand{font-size:18px}
+.p-top .me{margin-left:auto;font-size:14px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.p-top .me b{color:var(--text);font-size:16px}
+.card{background:var(--panel);border-radius:16px;padding:20px}
+.p-center{flex:1;display:flex;flex-direction:column;justify-content:center;gap:16px;text-align:center}
+.p-center h2{font-size:26px;margin:0;font-weight:900}
+.p-center p{margin:0;color:var(--muted);font-size:16px;line-height:1.6}
+.big{font-size:56px;font-weight:900;line-height:1}
+label.fl{display:block;text-align:left;font-size:14px;color:var(--muted);margin-bottom:6px}
+input.tx{width:100%;font:inherit;font-size:20px;padding:14px;border-radius:12px;border:1.5px solid var(--line);background:#082029;color:var(--text)}
+input.tx:focus{border-color:var(--teal);outline:none}
+.err{color:var(--bad);font-size:15px;min-height:1.2em}
+.p-q{font-size:15px;color:var(--muted);line-height:1.5}
+.p-q b{color:var(--gold)}
+.p-opts{display:grid;gap:10px}
+.p-opt{display:flex;align-items:center;gap:12px;text-align:left;background:var(--bg2);border:2px solid var(--line);border-radius:14px;padding:12px 14px;color:var(--text);min-height:64px;width:100%}
+.p-opt .L{flex:none;width:40px;height:40px;border-radius:10px;background:var(--c);color:#062027;display:grid;place-items:center;font-weight:900;font-size:20px}
+.p-opt .T{font-size:16px;font-weight:700;line-height:1.4}
+.p-opt[aria-pressed="true"]{border-color:var(--c);background:color-mix(in srgb,var(--c) 18%,var(--bg2))}
+.p-timer{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.p-timer i{display:block;height:100%;background:var(--gold);width:100%;transition:width .25s linear}
+.res-ok{color:var(--ok)} .res-bad{color:var(--bad)}
+.foot{font-size:12px;color:var(--muted);text-align:center}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ================= HOST ================= -->
+<div id="host" class="hidden">
+  <div class="h-top">
+    <span class="brand">檢索<b>擂台</b></span>
+    <span class="round" id="hRound"></span>
+    <div class="meta"><span id="hQno"></span><span id="hTeams"></span><span id="hNet"></span></div>
+  </div>
+  <div class="h-main" id="hMain"></div>
+  <div class="h-bottom" id="hBottom"></div>
+</div>
+
+<!-- ================= PLAYER ================= -->
+<div id="player" class="hidden">
+  <div class="p-top">
+    <span class="brand">檢索<b>擂台</b></span>
+    <div class="me" id="pMe"></div>
+  </div>
+  <div id="pMain" style="flex:1;display:flex;flex-direction:column;gap:14px"></div>
+  <p class="foot">實證文獻搜尋策略與技巧・課堂競賽</p>
+</div>
+
+<script>
+// ===================== 題庫（答案在後台 Code.gs） =====================
+var BANK = [{"cat": "A 問題建構", "concept": "PICO 拆解", "prompt": "「住院長者使用床邊離床警報器，是否能降低跌倒發生？」其中的 I（介入）是？", "code": null, "multi": false, "opts": {"a": "床邊離床警報器", "b": "醫院病房", "c": "住院長者", "d": "跌倒發生"}, "explain": "<b>A。</b>I 是想評估的處置或暴露：床邊離床警報器。P 是住院長者，O 是跌倒發生。"}, {"cat": "A 問題建構", "concept": "C 沒指定就不放", "prompt": "「每日運動是否能改善化療病人的疲倦？」要放進檢索式的概念是？", "code": null, "multi": false, "opts": {"a": "化療病人、運動、疲倦、RCT", "b": "化療病人、運動、不運動、疲倦", "c": "化療病人（P）、運動（I）、疲倦（O）", "d": "只放運動"}, "explain": "<b>C。</b>原題沒指定比較組，C 不放；研究設計（RCT）用篩選器限定，不當關鍵字。"}, {"cat": "A 問題建構", "concept": "概念宜少不宜多", "prompt": "檢索式放了 5 個概念，結果只剩 3 筆。第一步最好怎麼做？", "code": null, "multi": false, "opts": {"a": "加上 NOT 排除雜訊", "b": "拿掉次要概念，逐一比較筆數變化", "c": "放棄，這題沒有研究", "d": "換一個資料庫重查"}, "explain": "<b>B。</b>概念越多越容易漏。先拿掉最不必要的概念（例如 C 或次要的 P 特徵），看筆數怎麼變。"}, {"cat": "A 問題建構", "concept": "問題類型決定研究設計", "prompt": "「某新型流感快篩能否準確診斷流感？」首選的原始研究設計是？", "code": null, "multi": false, "opts": {"a": "質性研究", "b": "隨機對照試驗（RCT）", "c": "病例報告", "d": "與參考標準比較的橫斷性研究"}, "explain": "<b>D。</b>診斷問題看準確度，要和參考標準（黃金標準）比較。治療問題才首選 RCT。"}, {"cat": "A 問題建構", "concept": "研究設計用篩選器", "prompt": "想只看 RCT，比較建議的做法是？", "code": null, "multi": false, "opts": {"a": "只查 Cochrane Library", "b": "在檢索式加上 RCT 這個字", "c": "用文章類型篩選器；完整搜尋則用驗證過的研究設計檢索策略", "d": "加上 NOT review"}, "explain": "<b>C。</b>研究設計（S）通常不當關鍵字放進概念；快速查找用篩選器，系統性回顧用驗證過的檢索策略（如 Cochrane HSSS）。"}, {"cat": "B 選資料庫", "concept": "6S 由上往下", "prompt": "在病房想快速知道某處置的現行建議，第一站最適合？", "code": null, "multi": false, "opts": {"a": "UpToDate 或 DynaMed", "b": "華藝線上圖書館", "c": "Google 搜尋", "d": "PubMed"}, "explain": "<b>A。</b>依 6S 金字塔由上往下：臨床摘要已整合證據與建議，最省時。需要更新證據再往下查。"}, {"cat": "B 選資料庫", "concept": "依主題選資料庫", "prompt": "想找護理照護措施的研究，除了 PubMed，最該加查哪個資料庫？", "code": null, "multi": false, "opts": {"a": "Embase", "b": "Web of Science", "c": "華藝線上圖書館", "d": "CINAHL"}, "explain": "<b>D。</b>CINAHL 收錄護理與健康專業文獻最完整。藥物議題加查 Embase，中文在地文獻查華藝。"}, {"cat": "B 選資料庫", "concept": "只查一個資料庫會漏", "prompt": "開場實測中，PubMed 查不到《臺灣醫界》那篇鳳梨禁忌文章，最可能的原因是？", "code": null, "multi": false, "opts": {"a": "文章太舊", "b": "該期刊沒有被 PubMed 收錄", "c": "文章要付費", "d": "檢索式寫錯"}, "explain": "<b>B。</b>國內中文期刊多數不在 PubMed。這就是要查多個資料庫、包含在地資料庫的原因。"}, {"cat": "C 詞彙", "concept": "自由詞與 MeSH 各有漏洞", "prompt": "為什麼只用 MeSH 主題詞檢索，會漏掉最新的文章？", "code": null, "multi": false, "opts": {"a": "新文章還沒被標引主題詞", "b": "新文章沒有摘要", "c": "MeSH 會自動截字", "d": "MeSH 只收中文文章"}, "explain": "<b>A。</b>剛上線的文章還沒標引 MeSH，只能靠標題／摘要的自由詞找到。所以兩者用 OR 並用。"}, {"cat": "C 詞彙", "concept": "MeSH 名稱不一定是常用名", "prompt": "「跌倒」在 PubMed 的 MeSH 主題詞是？", "code": null, "multi": false, "opts": {"a": "<span class=\"mono\">Falling</span>", "b": "<span class=\"mono\">Fall Injury</span>", "c": "<span class=\"mono\">Accidental Falls</span>", "d": "<span class=\"mono\">Falls</span>"}, "explain": "<b>C。</b>MeSH 名稱不一定是日常說法，例如蔓越莓是 Vaccinium macrocarpon、跌倒是 Accidental Falls。請到 MeSH Database 確認。"}, {"cat": "C 詞彙", "concept": "MeSH 預設包含下位詞", "prompt": "用 \"Urinary Tract Infections\"[Mesh] 檢索，預設會不會一起找到下位詞（例如 Bacteriuria）的文章？", "code": null, "multi": false, "opts": {"a": "只會找到上位詞", "b": "會，PubMed 預設會 explode 包含下位詞", "c": "要另外付費才會", "d": "不會，只找完全相同的詞"}, "explain": "<b>B。</b>PubMed 的 MeSH 檢索預設包含樹狀結構下的所有下位詞；只要該詞可加 [mh:noexp]。"}, {"cat": "C 詞彙", "concept": "屬名陷阱", "prompt": "想找蔓越莓研究，自由詞只寫 vaccinium[tiab] 會發生什麼事？", "code": null, "multi": false, "opts": {"a": "完全找不到", "b": "只找到蔓越莓錠劑", "c": "PubMed 會自動改成蔓越莓", "d": "抓到藍莓、山桑子等同屬植物的研究"}, "explain": "<b>D。</b>Vaccinium 是屬名，要寫完整學名片語 \"vaccinium macrocarpon\"。"}, {"cat": "C 詞彙", "concept": "英美拼法", "prompt": "hemorrhage[tiab] 會不會找到只寫 haemorrhage 的文章？", "code": null, "multi": false, "opts": {"a": "會，因為 [tiab] 包含所有拼法", "b": "不需要，英式拼法的文章不重要", "c": "不會，自由詞要把英式、美式拼法都列出來", "d": "會，PubMed 會自動轉換"}, "explain": "<b>C。</b>加了欄位標籤就不會觸發自動對應；英美拼法（haemorrhage／hemorrhage、paediatric／pediatric）要自己 OR 進去，MeSH 則能涵蓋。"}, {"cat": "C 詞彙", "concept": "縮寫與全名", "prompt": "檢索「加護病房」時，自由詞最完整的寫法是？", "code": null, "multi": false, "opts": {"a": "<span class=\"mono\">\"intensive care unit*\"[tiab] OR ICU[tiab] OR ICUs[tiab]</span>", "b": "<span class=\"mono\">\"intensive care unit\"[tiab]</span>", "c": "<span class=\"mono\">ICU*[tiab]</span>", "d": "<span class=\"mono\">ICU[tiab]</span>"}, "explain": "<b>A。</b>全名與縮寫都要列；ICU* 的 * 前不足 4 個字元，PubMed 不接受。"}, {"cat": "C 詞彙", "concept": "同義詞從哪裡找", "prompt": "想找某概念的同義詞，最好的起點是？", "code": null, "multi": false, "opts": {"a": "只靠自己想", "b": "期刊名稱", "c": "只問 AI，不用確認", "d": "MeSH Database 的 Entry Terms"}, "explain": "<b>D。</b>Entry Terms 列出 MeSH 收錄的同義說法；找到相關文章後，看標題與關鍵字也能挖到新詞。AI 可以發想，但要回資料庫確認。"}, {"cat": "D 檢索語法", "concept": "截字前至少 4 個字元", "prompt": "下列哪一個截字寫法，在 PubMed 不能用？", "code": null, "multi": false, "opts": {"a": "<span class=\"mono\">nurs*</span>", "b": "<span class=\"mono\">ICU*</span>", "c": "<span class=\"mono\">child*</span>", "d": "<span class=\"mono\">fall*</span>"}, "explain": "<b>B。</b>PubMed 規定 * 前至少要有 4 個字元；ICU* 只有 3 個，要改寫成 ICU OR ICUs。"}, {"cat": "D 檢索語法", "concept": "fall、falls、falling 怎麼截字", "prompt": "fall、falls、falling 三個字，截字要怎麼寫？", "code": null, "multi": false, "opts": {"a": "<span class=\"mono\">fall*</span>", "b": "<span class=\"mono\">fal*</span>", "c": "<span class=\"mono\">falls*</span>", "d": "<span class=\"mono\">*fall</span>"}, "explain": "<b>A。</b>fall* 前有 4 個字元，可一次找到 fall、falls、falling、fallen。fal* 字元不足，falls* 找不到 fall、falling，PubMed 也不支援前截字 *fall。"}, {"cat": "D 檢索語法", "concept": "截字會帶來雜訊", "prompt": "用 fall*[tiab] 找跌倒研究，可能混進哪些不相干的字？", "code": null, "multi": false, "opts": {"a": "accidental falls", "b": "falls、falling", "c": "fallopian（輸卵管）、fallacy（謬誤）", "d": "什麼都不會混進來"}, "explain": "<b>C。</b>截字很方便，但也會抓到字首相同的無關字。字形不多時，改寫成 fall OR falls OR falling，再加上 \"Accidental Falls\"[Mesh]。"}, {"cat": "D 檢索語法", "concept": "截字不跨空格", "prompt": "nurs*[tiab] 會不會把 * 延伸成 \"nursing home\" 這個片語？", "code": null, "multi": false, "opts": {"a": "會，但只限兩個字", "b": "不會，* 只延伸同一個字；要限定相連請用 \"nursing home*\"", "c": "不會，而且找不到任何含 nursing 的文章", "d": "會，* 可以跨空格"}, "explain": "<b>B。</b>* 只延伸同一個字的字尾。含 nursing 的文章都找得到，但若要兩字相連，需用雙引號片語。"}, {"cat": "D 檢索語法", "concept": "片語雙引號", "prompt": "想確保 pressure 和 injury 兩個字相連出現，要怎麼寫？", "code": null, "multi": false, "opts": {"a": "<span class=\"mono\">pressure NOT injury</span>", "b": "<span class=\"mono\">pressure AND injury</span>", "c": "<span class=\"mono\">pressure* injury</span>", "d": "<span class=\"mono\">\"pressure injury\"[tiab]</span>"}, "explain": "<b>D。</b>雙引號把多個字視為一個片語；用 AND 只要求兩字都出現，不保證相連。"}, {"cat": "D 檢索語法", "concept": "[tiab] 與 All Fields", "prompt": "用 women 檢索，卻抓到作者單位是「Brigham and Women's Hospital」的文章。怎麼改？", "code": null, "multi": false, "opts": {"a": "<span class=\"mono\">women*</span>", "b": "<span class=\"mono\">women[All Fields]</span>", "c": "<span class=\"mono\">women[tiab]</span>", "d": "<span class=\"mono\">NOT hospital</span>"}, "explain": "<b>C。</b>All Fields 包含作者單位、期刊名等欄位；[tiab] 只找標題與摘要，雜訊較少。"}, {"cat": "D 檢索語法", "concept": "[majr] 限主要主題", "prompt": "結果太多，只想找以「跌倒」為主要主題的文章，可以用？", "code": null, "multi": false, "opts": {"a": "<span class=\"mono\">\"Accidental Falls\"[majr]</span>", "b": "<span class=\"mono\">fall*</span>", "c": "<span class=\"mono\">\"Accidental Falls\"[tiab]</span>", "d": "<span class=\"mono\">\"Accidental Falls\" OR falls</span>"}, "explain": "<b>A。</b>[majr] 只找把該 MeSH 標為主要主題（Major Topic）的文章，可以大幅縮小結果；但未標引的新文章會漏掉。"}, {"cat": "D 檢索語法", "concept": "鄰近檢索", "prompt": "想同時找到 urinary infection 和 urinary tract infection，PubMed 可以怎麼寫？", "code": null, "multi": false, "opts": {"a": "<span class=\"mono\">urinary AND infection[All Fields]</span>", "b": "<span class=\"mono\">\"urinary infection\"[tiab]</span>", "c": "<span class=\"mono\">urinary* infection</span>", "d": "<span class=\"mono\">\"urinary infection\"[tiab:~2]</span>"}, "explain": "<b>D。</b>[tiab:~N] 是鄰近檢索，兩字相距 N 個字以內都算。Ovid Embase 用 adjN，Cochrane 用 NEAR/n。"}, {"cat": "D 檢索語法", "concept": "括號與運算順序", "prompt": "在 PubMed 輸入 fall[tiab] AND elderly[tiab] OR aged[tiab]，會發生什麼事？", "code": "<span class=\"mono\">fall[tiab] AND elderly[tiab] OR aged[tiab]</span>", "multi": false, "opts": {"a": "PubMed 會自動加好括號", "b": "由左到右處理，變成 (fall AND elderly) OR aged，抓進所有 aged 文章", "c": "會出現錯誤訊息", "d": "只找同時有三個字的文章"}, "explain": "<b>B。</b>PubMed 由左到右處理運算子。正確寫法是 fall[tiab] AND (elderly[tiab] OR aged[tiab])：有 OR 又有 AND 時，一定用括號包住同一概念。"}, {"cat": "D 檢索語法", "concept": "ATM 何時啟動", "prompt": "輸入 cranberr* 之後，PubMed 還會自動對應到 MeSH 主題詞嗎？", "code": null, "multi": false, "opts": {"a": "不會，加了截字、雙引號或欄位標籤，ATM 就不啟動", "b": "會，一定會自動對應", "c": "會，但只對應到 All Fields", "d": "只有在週末會"}, "explain": "<b>A。</b>自動詞彙對應（ATM）只在未加標記時啟動；用了截字就要自己加 MeSH。"}, {"cat": "E 布林邏輯", "concept": "同義詞之間用 OR", "prompt": "fall、falls、falling 這幾個同義詞之間，要用什麼連接？", "code": null, "multi": false, "opts": {"a": "AND", "b": "NOT", "c": "OR", "d": "不用連接"}, "explain": "<b>C。</b>同義詞是「有其中一個就算」，用 OR 才能把概念找齊。"}, {"cat": "E 布林邏輯", "concept": "概念之間用 AND", "prompt": "「壓傷」和「減壓床墊」這兩個概念之間，要用什麼連接？", "code": null, "multi": false, "opts": {"a": "OR", "b": "AND", "c": "( )", "d": "NOT"}, "explain": "<b>B。</b>不同概念都要出現，用 AND 取交集，範圍才會聚焦。"}, {"cat": "E 布林邏輯", "concept": "OR 的筆數", "prompt": "A 查到 300 筆，B 查到 200 筆，A OR B 的結果最可能是？", "code": null, "multi": false, "opts": {"a": "250 筆", "b": "600 筆", "c": "100 筆", "d": "420 筆"}, "explain": "<b>D。</b>OR 會去掉重複，所以不是直接相加（500）；但一定不少於較多的那一行（300）。範圍在 300–500 之間。"}, {"cat": "E 布林邏輯", "concept": "NOT 的陷阱", "prompt": "只想找成人研究，下了 NOT children，會出什麼問題？", "code": null, "multi": false, "opts": {"a": "結果會變多", "b": "完全沒有問題", "c": "同時納入成人與兒童的研究也會被刪掉", "d": "只會刪掉動物研究"}, "explain": "<b>C。</b>NOT 會刪掉任何提到 children 的文章，包括同時研究成人和兒童的。建議改用年齡篩選器或保留必要概念。"}, {"cat": "F 策略與調整", "concept": "逐行檢索的好處", "prompt": "在 PubMed Advanced 每個詞各跑一行、再組合，最大的好處是？", "code": null, "multi": false, "opts": {"a": "看得到每一行的筆數，要調整只改一行", "b": "結果一定比較少", "c": "可以不用 MeSH", "d": "PubMed 會比較快"}, "explain": "<b>A。</b>逐行檢索讓每個詞的貢獻一目了然；結果太多或太少時，只改其中一行就好。"}, {"cat": "F 策略與調整", "concept": "結果太多怎麼縮小", "prompt": "查到 5,000 筆，下列哪一個「不是」縮小範圍的方法？", "code": null, "multi": false, "opts": {"a": "再 AND 一個關鍵概念", "b": "改用 [majr] 主要主題", "c": "加上出版年或文章類型篩選", "d": "補更多同義詞並用截字"}, "explain": "<b>D。</b>補同義詞、截字是「擴大」的方法。縮小可用加概念、[majr]、限 [ti]、篩選器。"}, {"cat": "F 策略與調整", "concept": "結果太少怎麼擴大", "prompt": "只查到 3 筆，下列哪一個最有幫助？", "code": null, "multi": false, "opts": {"a": "加上 NOT 排除雜訊", "b": "補同義詞、縮寫，用 OR 加進去", "c": "自由詞只限標題 [ti]", "d": "改用 [majr]"}, "explain": "<b>B。</b>結果太少要擴大：補同義詞、用截字、拿掉次要概念或篩選器，或從好文章追參考文獻與被引用。"}, {"cat": "G 篩選器", "concept": "篩選器依賴標引", "prompt": "勾選「Randomized Controlled Trial」文章類型，可能漏掉什麼？", "code": null, "multi": false, "opts": {"a": "剛上線、還沒標引出版類型的新 RCT", "b": "中文文章", "c": "所有舊的 RCT", "d": "系統性回顧"}, "explain": "<b>A。</b>文章類型、Humans 等篩選多依賴標引；最新文章可能還沒標好。快速查找沒問題，完整搜尋要謹慎。"}, {"cat": "G 篩選器", "concept": "語言篩選看的是出版語言", "prompt": "同事勾了 English，理由是「看不懂其他語言」。問題在哪？", "code": null, "multi": false, "opts": {"a": "應改用 NOT Chinese", "b": "應改勾 Humans", "c": "語言篩選限制文章的出版語言，會漏掉中文等研究，也可能造成語言偏差", "d": "沒有問題"}, "explain": "<b>C。</b>語言篩選看的是文章用什麼語言發表，不是讀者的能力。Cochrane Handbook 也建議不要因語言限制排除研究。"}, {"cat": "G 篩選器", "concept": "Humans 篩選的替代寫法", "prompt": "想排除純動物研究，又不誤刪還沒標引的新文章，較好的寫法是？", "code": null, "multi": false, "opts": {"a": "<span class=\"mono\">NOT mice</span>", "b": "<span class=\"mono\">NOT (animals[mh] NOT humans[mh])</span>", "c": "<span class=\"mono\">NOT animals[mh]</span>", "d": "<span class=\"mono\">AND humans[mh]</span>"}, "explain": "<b>B。</b>直接勾 Humans 會漏掉未標引文章；NOT animals[mh] 會刪掉同時研究人和動物的文章。這個寫法只排除「只有動物」的文章。"}, {"cat": "G 篩選器", "concept": "Clinical Queries", "prompt": "想依「治療、診斷、預後、病因」自動套用研究設計篩選，可以用 PubMed 的？", "code": null, "multi": false, "opts": {"a": "MeSH Database", "b": "Similar articles", "c": "My NCBI", "d": "Clinical Queries"}, "explain": "<b>D。</b>Clinical Queries 依問題類型套用內建的研究設計檢索策略，適合臨床快速查找。"}, {"cat": "H 記錄與可重現", "concept": "要記錄哪些項目", "prompt": "下列哪一項「不是」檢索紀錄的必要項目？", "code": null, "multi": false, "opts": {"a": "篩選條件與筆數", "b": "檢索日期", "c": "使用的電腦型號", "d": "完整檢索式"}, "explain": "<b>C。</b>要記：資料庫與平台、檢索日期、完整檢索式、篩選條件、筆數。系統性回顧可參考 PRISMA-S。"}, {"cat": "H 記錄與可重現", "concept": "History 會清除", "prompt": "今天做完檢索，隔天再打開 PubMed，History 還在嗎？", "code": null, "multi": false, "opts": {"a": "約 8 小時沒有操作就會清除，所以要當場 Download", "b": "保存一週", "c": "永久保存", "d": "要付費才會保存"}, "explain": "<b>A。</b>做完就用 History 右上角的 Download 下載紀錄，或用 Create alert 儲存檢索式。"}, {"cat": "H 記錄與可重現", "concept": "檢查檢索式", "prompt": "想確認 PubMed 實際怎麼執行你的檢索式，要看哪裡？", "code": null, "multi": false, "opts": {"a": "Similar articles", "b": "Cite", "c": "Display options", "d": "Details（History and Search Details）"}, "explain": "<b>D。</b>Search Details 顯示 PubMed 實際執行的檢索式，可檢查有沒有被自動加詞或改掉。"}, {"cat": "H 記錄與可重現", "concept": "Create alert", "prompt": "想在新研究發表時自動收到 email 通知，要用哪個功能？", "code": null, "multi": false, "opts": {"a": "Download", "b": "Create alert（儲存到 My NCBI）", "c": "Send to Clipboard", "d": "Add query"}, "explain": "<b>B。</b>Create alert 會把檢索式存到 My NCBI，並依設定頻率寄送新文章；需先登入 My NCBI。"}, {"cat": "I AI 與驗證", "concept": "驗證文獻是否存在", "prompt": "AI 給了 5 篇參考文獻，第一步應該做什麼？", "code": null, "multi": false, "opts": {"a": "回資料庫逐篇確認是否存在、書目是否正確", "b": "直接引用", "c": "請 AI 再確認一次", "d": "只看星等最高的"}, "explain": "<b>A。</b>生成式 AI 可能編造看似真實的文獻。存在、作者、期刊、內容都要回原資料庫核對。"}, {"cat": "I AI 與驗證", "concept": "星等不等於證據強度", "prompt": "AI 給一篇研討會摘要 5 顆星、一篇 RCT 3 顆星。怎麼看？", "code": null, "multi": false, "opts": {"a": "5 顆星的一定比較可信", "b": "RCT 一定不相關", "c": "星等是 AI 判斷的相關性，不是證據強度；研討會摘要未經同儕審查", "d": "星等就是證據等級"}, "explain": "<b>C。</b>要自己看文獻類型：研討會摘要、學位論文屬灰色文獻，證據力要評讀後判斷。"}, {"cat": "I AI 與驗證", "concept": "AI 會漏掉文獻", "prompt": "怎麼知道 AI 有沒有漏掉重要文獻？", "code": null, "multi": false, "opts": {"a": "看 AI 回答的長度", "b": "自己用系統化檢索，查多個資料庫比對", "c": "AI 不會漏", "d": "再問 AI 一次"}, "explain": "<b>B。</b>AI 不會告訴你它漏了什麼。開場實測中，AI 就漏掉了華藝的中文文章。"}, {"cat": "I AI 與驗證", "concept": "投稿的 AI 揭露規範", "prompt": "依 ICMJE 建議，論文中用 AI 協助資料蒐集或分析，應該怎麼處理？", "code": null, "multi": false, "opts": {"a": "把 AI 列為共同作者", "b": "只寫在參考文獻", "c": "不用說明", "d": "在研究方法中說明"}, "explain": "<b>D。</b>AI 不能列為作者；寫作輔助寫在致謝，用於資料蒐集或分析要寫在方法。作者要為全部內容負責。"}];
+var LETTERS = ['a','b','c','d','e','f'];
+
+// ===================== 共用 =====================
+var params = new URLSearchParams(location.search);
+var API = params.get('api') || API_URL;
+var HOST_KEY = params.get('host');
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function api(body){
+  return fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body),redirect:'follow'}).then(function(r){return r.json()});
+}
+function getState(team){
+  var u = API + (API.indexOf('?')>-1?'&':'?') + 'action=state' + (team?'&team='+encodeURIComponent(team):'') + '&_=' + Date.now();
+  return fetch(u,{redirect:'follow'}).then(function(r){return r.json()});
+}
+function store(k,v){try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v);}catch(e){return null}}
+function fmt(n){return Number(n||0).toLocaleString('en-US')}
+
+// ===================== HOST =====================
+function Host(){
+  var el = document.getElementById('host'); el.classList.remove('hidden');
+  var main = document.getElementById('hMain'), bottom = document.getElementById('hBottom');
+  var S = null, key = '', recvAt = 0, busy = false, confirmReset = false, qrDone = false;
+  var joinUrl = location.origin + location.pathname + (params.get('api') ? '?api='+encodeURIComponent(params.get('api')) : '');
+
+  var CATS = []; BANK.forEach(function(q){ if(CATS.indexOf(q.cat)<0) CATS.push(q.cat); });
+  var sel = []; try{ sel = JSON.parse(localStorage.getItem('srch-sel')||'[]'); }catch(e){}
+  sel = sel.filter(function(i){ return i>=0 && i<BANK.length; });
+  function saveSel(){ try{ localStorage.setItem('srch-sel',JSON.stringify(sel)); }catch(e){} }
+  function pickRandom(n){
+    var byCat = CATS.map(function(c){ return BANK.map(function(q,i){return q.cat===c?i:-1}).filter(function(i){return i>=0}).sort(function(){return Math.random()-.5}); });
+    var out = [];
+    while(out.length<n && byCat.some(function(l){return l.length})){ byCat.forEach(function(l){ if(out.length<n && l.length) out.push(l.shift()); }); }
+    return out.sort(function(x,y){return x-y});
+  }
+  if(!sel.length) sel = pickRandom(8);
+  function cmd(c){
+    if(busy) return; busy = true; draw();
+    api({action:'host',key:HOST_KEY,cmd:c,list:c==='start'?sel:undefined}).then(function(r){
+      busy = false;
+      if(!r.ok){ alertBox(r.error||'操作失敗'); return; }
+      S = r; recvAt = Date.now(); key=''; draw();
+    }).catch(function(){ busy=false; alertBox('連線失敗，請再按一次'); });
+  }
+  function alertBox(msg){ document.getElementById('hNet').textContent = '⚠ '+msg; }
+  function poll(){
+    getState().then(function(r){ if(r.ok){ S=r; recvAt=Date.now(); document.getElementById('hNet').textContent=''; draw(); } })
+      .catch(function(){ document.getElementById('hNet').textContent='⚠ 連線中斷，重試中'; })
+      .finally(function(){ setTimeout(poll,1500); });
+  }
+  function remaining(){ if(!S||S.phase!=='open') return 0; return Math.max(0,S.remaining-(Date.now()-recvAt)); }
+
+  function optsHtml(q, reveal){
+    var keys = Object.keys(q.opts), total = 0;
+    if(reveal&&S.dist) keys.forEach(function(k){ total=Math.max(total,S.dist[k]||0); });
+    return '<div class="opts'+(reveal?' revealed':'')+'">'+keys.map(function(k){
+      var right = reveal && S.correct && S.correct.indexOf(k)>-1;
+      var n = reveal&&S.dist ? (S.dist[k]||0) : null;
+      var w = reveal&&total ? Math.round(100*n/total) : 0;
+      return '<div class="opt opt-'+k+(right?' right':'')+'"><span class="bar" style="width:'+w+'%"></span><span class="L">'+k.toUpperCase()+'</span><span class="T">'+q.opts[k]+'</span>'+(n!==null?'<span class="n">'+n+'</span>':'')+'</div>';
+    }).join('')+'</div>';
+  }
+  function boardHtml(limit){
+    var b = (S.board||[]).slice(0,limit);
+    if(!b.length) return '<p style="text-align:center;color:var(--muted);font-size:22px">還沒有隊伍</p>';
+    return '<div class="board">'+b.map(function(r,i){
+      return '<div class="brow'+(i<3?' top'+(i+1):'')+'"><span class="rk">'+(i+1)+'</span><span>'+esc(r.team)+'</span><span class="sc">'+fmt(r.score)+'</span></div>';
+    }).join('')+'</div>';
+  }
+  function btn(label,c,cls,dis){ return '<button class="btn '+(cls||'')+'" data-cmd="'+c+'"'+(dis||busy?' disabled':'')+'>'+label+'</button>'; }
+
+  function draw(){
+    if(!S){ main.innerHTML='<p style="font-size:24px;color:var(--muted)">連線到後台中⋯</p>'; bottom.innerHTML=''; return; }
+    var q = S.qid>=0 ? BANK[S.qid] : null;
+    document.getElementById('hRound').innerHTML = q && S.phase!=='end' ? esc(q.cat)+((S.phase==='reveal')?'｜'+esc(q.concept):'')+(S.double?' <span class="x2">最終題・分數 ×2</span>':'') : '';
+    document.getElementById('hQno').textContent = q && S.phase!=='end' ? '第 '+(S.q+1)+' / '+S.total+' 題' : '';
+    document.getElementById('hTeams').textContent = S.teamCount+' 組參賽';
+    var b = '';
+    if(S.phase==='lobby'){
+      var teams = S.teams||[];
+      if(!qrDone || !document.getElementById('qr')){
+        main.innerHTML = '<div class="lobby"><div><div class="qrbox"><div id="qr"></div></div><p class="joinurl">'+esc(joinUrl)+'</p></div>'+
+          '<div><h1>掃描加入<br><b>檢索擂台</b></h1><p class="sub">每組一支手機，輸入組名後等待開始</p><div class="teams" id="hTeamChips"></div>'+
+          '<div class="rules"><div class="rule"><div class="k">題數</div><div class="v" id="hSelN">'+sel.length+' 題</div></div><div class="rule"><div class="k">計分</div><div class="v">答對 500–1000 分</div></div><div class="rule"><div class="k">速度</div><div class="v">越快答對越高分</div></div><div class="rule"><div class="k">最終題</div><div class="v">分數加倍</div></div></div>'+selPanel()+'</div></div>';
+        try{ new QRCode(document.getElementById('qr'),{text:joinUrl,width:320,height:320,correctLevel:QRCode.CorrectLevel.M}); }catch(e){ document.getElementById('qr').innerHTML='<p style="color:#123">QR 產生失敗，請改用下方網址</p>'; }
+        qrDone = true;
+      }
+      var chips = document.getElementById('hTeamChips');
+      var have = Array.prototype.map.call(chips.children,function(c){return c.textContent});
+      teams.forEach(function(t){ if(have.indexOf(t)<0){ var s=document.createElement('span'); s.className='chip'; s.textContent=t; chips.appendChild(s);} });
+      var n = document.getElementById('hSelN'); if(n) n.textContent = sel.length+' 題';
+      b = '<span class="count">已加入 <b>'+teams.length+'</b> 組・已選 <b>'+sel.length+'</b> 題</span><span class="spacer"></span>'+btn('開始第 1 題 →','start','',teams.length===0||!sel.length);
+    } else {
+      qrDone = false;
+      if(S.phase==='open'||S.phase==='closed'){
+        main.innerHTML = '<div class="qtext">'+q.prompt+'</div>'+(q.code?'<div class="qcode">'+q.code+'</div>':'')+optsHtml(q,false);
+        var r = remaining(), lim = S.limit*1000, frac = lim? r/lim : 0, C = 2*Math.PI*36;
+        b = '<div class="timer"><svg class="ring" viewBox="0 0 84 84" aria-label="剩餘秒數"><circle class="bg" cx="42" cy="42" r="36"/><circle class="fg" cx="42" cy="42" r="36" stroke-dasharray="'+C+'" stroke-dashoffset="'+(C*(1-frac))+'" transform="rotate(-90 42 42)"/><text x="42" y="44">'+(S.phase==='open'?Math.ceil(r/1000):'0')+'</text></svg>'+
+            '<span class="count">已作答 <b>'+S.answered+'</b> / '+S.teamCount+' 組'+(S.phase==='closed'?'・時間到':'')+'</span></div><span class="spacer"></span>'+
+            (S.phase==='open'?btn('提前截止','close','ghost'):'')+btn('公布答案','reveal');
+      } else if(S.phase==='reveal'){
+        main.innerHTML = '<div class="qtext">'+q.prompt+'</div>'+(q.code?'<div class="qcode">'+q.code+'</div>':'')+optsHtml(q,true)+'<div class="explain">'+q.explain+'</div>';
+        b = '<span class="count">答題 <b>'+S.answered+'</b> 組</span><span class="spacer"></span>'+btn(S.q+1>=S.total?'看最終排名 →':'看排行榜 →','board');
+      } else if(S.phase==='board'){
+        main.innerHTML = '<div class="endtitle">第 '+(S.q+1)+' 題後排行榜</div>'+boardHtml(8);
+        b = '<span class="spacer"></span>'+btn('下一題 →','next');
+      } else if(S.phase==='end'){
+        var w = S.board&&S.board[0];
+        main.innerHTML = '<div class="endtitle">冠軍：<b>'+(w?esc(w.team):'—')+'</b></div>'+boardHtml(12);
+        b = '<span class="spacer"></span>';
+      }
+    }
+    if(S.phase==='end'||S.phase==='board'||S.phase==='lobby'){
+      b += confirmReset ? '<span class="confirm">確定清除所有隊伍與分數？'+btn('確定重來','reset','warn')+'<button class="btn ghost" data-x="1">取消</button></span>'
+                        : '<button class="btn ghost" data-r="1">重新開始</button>';
+    }
+    if(bottom.innerHTML!==b) bottom.innerHTML = b;
+  }
+  function selPanel(){
+    return '<div class="selp"><div class="selbar"><b>選題</b><button class="btn ghost sm" data-sel="r8">隨機 8 題</button><button class="btn ghost sm" data-sel="r12">隨機 12 題</button><button class="btn ghost sm" data-sel="all">全選</button><button class="btn ghost sm" data-sel="none">清除</button></div>'+
+      '<details class="sellist"><summary>自訂題目（依觀念分類）</summary>'+CATS.map(function(c){
+        return '<fieldset><legend>'+esc(c)+'</legend>'+BANK.map(function(q,i){ return q.cat!==c?'':'<label><input type="checkbox" data-i="'+i+'"'+(sel.indexOf(i)>-1?' checked':'')+'> '+esc(q.concept)+'</label>'; }).join('')+'</fieldset>';
+      }).join('')+'</details></div>';
+  }
+  main.addEventListener('click',function(e){
+    var t = e.target.closest('[data-sel]'); if(!t) return;
+    var m = t.dataset.sel;
+    sel = m==='r8'?pickRandom(8):m==='r12'?pickRandom(12):m==='all'?BANK.map(function(q,i){return i}):[];
+    saveSel(); main.querySelectorAll('.sellist input').forEach(function(c){ c.checked = sel.indexOf(+c.dataset.i)>-1; }); draw();
+  });
+  main.addEventListener('change',function(e){
+    var c = e.target; if(!c.dataset || c.dataset.i===undefined) return;
+    var i = +c.dataset.i, k = sel.indexOf(i);
+    if(c.checked && k<0) sel.push(i); if(!c.checked && k>-1) sel.splice(k,1);
+    sel.sort(function(x,y){return x-y}); saveSel(); draw();
+  });
+  bottom.addEventListener('click',function(e){
+    var t = e.target.closest('button'); if(!t) return;
+    if(t.dataset.r){ confirmReset=true; draw(); return; }
+    if(t.dataset.x){ confirmReset=false; draw(); return; }
+    if(t.dataset.cmd){ if(t.dataset.cmd==='reset') confirmReset=false; cmd(t.dataset.cmd); }
+  });
+  document.addEventListener('keydown',function(e){
+    if(e.key!==' '&&e.key!=='ArrowRight') return;
+    var t = bottom.querySelector('button[data-cmd]:not([disabled]):last-of-type'); if(t){ e.preventDefault(); t.click(); }
+  });
+  setInterval(function(){ if(S&&S.phase==='open') draw(); },250);
+  draw(); poll();
+}
+
+// ===================== PLAYER =====================
+function Player(){
+  document.getElementById('player').classList.remove('hidden');
+  var main = document.getElementById('pMain'), meEl = document.getElementById('pMe');
+  var team = store('srch-team') || '', S = null, recvAt = 0, picked = [], lastKey = '', sending = false, errMsg = '';
+
+  function setMe(){
+    meEl.innerHTML = team && S && S.me && S.me.joined ? '<b>'+esc(team)+'</b><br>'+fmt(S.me.score)+' 分'+(S.me.rank?'・第 '+S.me.rank+' 名':'') : '';
+  }
+  function joinView(){
+    main.innerHTML = '<div class="p-center"><div class="card" style="text-align:left;display:flex;flex-direction:column;gap:12px">'+
+      '<h2 style="font-size:24px">加入檢索擂台</h2><p style="margin:0;color:var(--muted)">每組一支手機就好。</p>'+
+      '<div><label class="fl" for="tn">組名（最多 12 字）</label><input class="tx" id="tn" maxlength="12" autocomplete="off" value="'+esc(team)+'"></div>'+
+      '<p class="err" id="jerr">'+esc(errMsg)+'</p><button class="btn" id="jbtn">加入</button></div></div>';
+    var go = function(){
+      var v = document.getElementById('tn').value.trim(); if(!v){ document.getElementById('jerr').textContent='請輸入組名'; return; }
+      var b = document.getElementById('jbtn'); b.disabled = true; b.textContent='加入中⋯';
+      api({action:'join',team:v}).then(function(r){
+        if(!r.ok){ errMsg=r.error||'加入失敗'; lastKey=''; render(); return; }
+        team = r.team; store('srch-team',team); errMsg=''; lastKey=''; refresh();
+      }).catch(function(){ errMsg='連線失敗，請再試一次'; lastKey=''; render(); });
+    };
+    document.getElementById('jbtn').onclick = go;
+    document.getElementById('tn').onkeydown = function(e){ if(e.key==='Enter') go(); };
+  }
+  function center(h,p,extra){ main.innerHTML = '<div class="p-center">'+h+(p?'<p>'+p+'</p>':'')+(extra||'')+'</div>'; }
+  function remaining(){ if(!S||S.phase!=='open') return 0; return Math.max(0,S.remaining-(Date.now()-recvAt)); }
+
+  function questionView(q){
+    main.innerHTML = '<div class="p-timer"><i id="pt"></i></div><p class="p-q"><b>第 '+(S.q+1)+'/'+S.total+' 題・'+esc(q.cat)+(S.double?'・分數 ×2':'')+'</b><br>'+q.prompt+'</p>'+
+      (q.code?'<div class="qcode" style="font-size:14px;padding:10px 12px">'+q.code+'</div>':'')+
+      '<div class="p-opts">'+Object.keys(q.opts).map(function(k){
+        return '<button class="p-opt opt-'+k+'" data-k="'+k+'" aria-pressed="'+(picked.indexOf(k)>-1)+'"><span class="L">'+k.toUpperCase()+'</span><span class="T">'+q.opts[k]+'</span></button>';
+      }).join('')+'</div>'+(q.multi?'<button class="btn" id="sendMulti" '+(picked.length?'':'disabled')+'>送出 '+picked.length+' 個選項</button>':'')+
+      '<p class="err" id="perr">'+esc(errMsg)+'</p>';
+    main.querySelectorAll('.p-opt').forEach(function(b){
+      b.onclick = function(){
+        if(sending) return;
+        var k = b.dataset.k;
+        if(q.multi){ var i=picked.indexOf(k); if(i>-1) picked.splice(i,1); else picked.push(k); lastKey=''; render(); }
+        else send([k]);
+      };
+    });
+    var sm = document.getElementById('sendMulti'); if(sm) sm.onclick = function(){ send(picked.slice()); };
+    tickBar();
+  }
+  function send(ch){
+    sending = true; errMsg='';
+    main.querySelectorAll('button').forEach(function(b){ b.disabled=true; });
+    api({action:'answer',team:team,q:S.q,choice:ch}).then(function(r){
+      sending=false;
+      if(!r.ok){ errMsg=r.error||'送出失敗'; }
+      else { S.me.answered = true; }
+      lastKey=''; refresh();
+    }).catch(function(){ sending=false; errMsg='連線失敗，請再按一次'; lastKey=''; render(); });
+  }
+  function tickBar(){ var i=document.getElementById('pt'); if(i&&S&&S.limit){ i.style.width = (100*remaining()/(S.limit*1000))+'%'; } }
+
+  function render(){
+    setMe();
+    var k = [S?S.phase:'', S?S.q:'', S&&S.me?S.me.answered+'/'+S.me.joined:'', picked.join(''), errMsg, team].join('|');
+    if(k===lastKey){ tickBar(); return; }
+    lastKey = k;
+    if(!S){ center('<h2>連線中⋯</h2>'); return; }
+    if(!team || !S.me || !S.me.joined){ joinView(); return; }
+    var q = S.qid>=0 ? BANK[S.qid] : null;
+    if(S.phase==='lobby') center('<div class="big">✓</div><h2>'+esc(team)+' 已加入</h2>','請看大螢幕，等主持人開始。');
+    else if(S.phase==='open'){
+      if(S.me.answered) center('<div class="big">⏳</div><h2>已送出</h2>','等其他組作答，答案稍後公布。');
+      else questionView(q);
+    }
+    else if(S.phase==='closed') center('<div class="big">⏱</div><h2>'+(S.me.answered?'已送出':'時間到')+'</h2>','請看大螢幕公布答案。');
+    else if(S.phase==='reveal'){
+      if(!S.me.answered) center('<div class="big res-bad">—</div><h2>這題沒有作答</h2>', '正確答案：'+(S.correct||[]).map(function(c){return c.toUpperCase()}).join('、'));
+      else if(S.me.right) center('<div class="big res-ok">+'+fmt(S.me.pts)+'</div><h2 class="res-ok">答對了！</h2>','正確答案：'+(S.correct||[]).map(function(c){return c.toUpperCase()}).join('、'));
+      else center('<div class="big res-bad">✗</div><h2 class="res-bad">差一點</h2>','正確答案：'+(S.correct||[]).map(function(c){return c.toUpperCase()}).join('、')+'<br>看大螢幕的解說。');
+    }
+    else if(S.phase==='board') center('<div class="big">'+(S.me.rank||'—')+'</div><h2>目前第 '+(S.me.rank||'—')+' 名</h2>',fmt(S.me.score)+' 分・準備下一題');
+    else if(S.phase==='end') center('<div class="big">'+(S.me.rank===1?'🏆':(S.me.rank||'—'))+'</div><h2>最終第 '+(S.me.rank||'—')+' 名</h2>',fmt(S.me.score)+' 分・謝謝參與！',
+      '<p style="font-size:14px">回去用自己的臨床問題，實際在 PubMed 試一次吧。</p>');
+  }
+  var prevQ = null;
+  function refresh(){
+    return getState(team).then(function(r){
+      if(!r.ok) return;
+      if(r.q!==prevQ){ picked=[]; errMsg=''; prevQ=r.q; }
+      S=r; recvAt=Date.now(); render();
+    }).catch(function(){});
+  }
+  function loop(){ refresh().finally(function(){ setTimeout(loop,2000); }); }
+  setInterval(function(){ if(S&&S.phase==='open') tickBar(); },250);
+  render(); loop();
+}
+
+if(API.indexOf('請貼上')>-1){
+  document.body.innerHTML = '<div style="padding:24px;max-width:560px;margin:10vh auto;font-size:18px;line-height:1.7"><h2>尚未設定後台網址</h2><p>請打開 index.html，把 Apps Script 部署網址貼到 <code>API_URL</code>。</p></div>';
+} else if(HOST_KEY){ Host(); } else { Player(); }
+</script>
+</body>
+</html>
