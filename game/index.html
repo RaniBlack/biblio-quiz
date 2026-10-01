@@ -130,6 +130,8 @@ input.tx:focus{border-color:var(--teal);outline:none}
 .p-opt .L{flex:none;width:40px;height:40px;border-radius:10px;background:var(--c);color:#062027;display:grid;place-items:center;font-weight:900;font-size:20px}
 .p-opt .T{font-size:16px;font-weight:700;line-height:1.4}
 .p-opt[aria-pressed="true"]{border-color:var(--c);background:color-mix(in srgb,var(--c) 18%,var(--bg2))}
+.p-opt.fade{opacity:.35}
+.hint{color:var(--muted);font-size:14px;text-align:center;min-height:1.2em;margin:0}
 .p-timer{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
 .p-timer i{display:block;height:100%;background:var(--gold);width:100%;transition:width .25s linear}
 .res-ok{color:var(--ok)} .res-bad{color:var(--bad)}
@@ -352,7 +354,7 @@ function Player(){
       '<div class="p-opts">'+Object.keys(q.opts).map(function(k){
         return '<button class="p-opt opt-'+k+'" data-k="'+k+'" aria-pressed="'+(picked.indexOf(k)>-1)+'"><span class="L">'+k.toUpperCase()+'</span><span class="T">'+q.opts[k]+'</span></button>';
       }).join('')+'</div>'+(q.multi?'<button class="btn" id="sendMulti" '+(picked.length?'':'disabled')+'>送出 '+picked.length+' 個選項</button>':'')+
-      '<p class="err" id="perr">'+esc(errMsg)+'</p>';
+      '<p class="hint" id="pHint"></p><p class="err" id="perr">'+esc(errMsg)+'</p>';
     main.querySelectorAll('.p-opt').forEach(function(b){
       b.onclick = function(){
         if(sending) return;
@@ -366,7 +368,11 @@ function Player(){
   }
   function send(ch){
     sending = true; errMsg='';
+    var hint = document.getElementById('pHint'); if(hint) hint.textContent = '已送出，確認中…';
     main.querySelectorAll('button').forEach(function(b){ b.disabled=true; });
+    main.querySelectorAll('.p-opt').forEach(function(b){
+      if(ch.indexOf(b.dataset.k)>-1) b.setAttribute('aria-pressed','true'); else b.classList.add('fade');
+    });
     api({action:'answer',team:team,q:S.q,choice:ch}).then(function(r){
       sending=false;
       if(!r.ok){ errMsg=r.error||'送出失敗'; }
