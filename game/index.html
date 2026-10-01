@@ -40,6 +40,10 @@ button{font:inherit;cursor:pointer}
 .h-top{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
 .h-top .brand{font-size:28px}
 .h-top .meta{margin-left:auto;display:flex;gap:18px;color:var(--muted);font-size:18px;font-variant-numeric:tabular-nums}
+.hqr{display:flex;align-items:center;gap:8px}
+.hqr-box{background:#fff;border-radius:8px;padding:4px;width:52px;height:52px;display:grid;place-items:center;flex:none}
+.hqr-box canvas,.hqr-box img{width:100%!important;height:100%!important}
+.hqr-url{font-size:11px;color:var(--muted);word-break:break-all;line-height:1.3;max-width:220px}
 .h-main{flex:1;display:flex;flex-direction:column;gap:22px}
 .round{display:inline-flex;gap:10px;align-items:center;font-size:18px;font-weight:700;color:var(--gold);letter-spacing:.08em}
 .round .x2{background:var(--berry);color:#fff;border-radius:6px;padding:2px 8px;font-size:15px}
@@ -140,6 +144,7 @@ input.tx:focus{border-color:var(--teal);outline:none}
   <div class="h-top">
     <span class="brand">檢索<b>擂台</b></span>
     <span class="round" id="hRound"></span>
+    <div class="hqr" id="hQrCorner"><div class="hqr-box" id="qrMini"></div><span class="hqr-url mono" id="hQrUrl"></span></div>
     <div class="meta"><span id="hQno"></span><span id="hTeams"></span><span id="hNet"></span></div>
   </div>
   <div class="h-main" id="hMain"></div>
@@ -182,6 +187,11 @@ function Host(){
   var main = document.getElementById('hMain'), bottom = document.getElementById('hBottom');
   var S = null, key = '', recvAt = 0, busy = false, confirmReset = false, qrDone = false;
   var joinUrl = location.origin + location.pathname + (params.get('api') ? '?api='+encodeURIComponent(params.get('api')) : '');
+  (function(){
+    var box = document.getElementById('qrMini');
+    if(box){ try{ new QRCode(box,{text:joinUrl,width:104,height:104,correctLevel:QRCode.CorrectLevel.M}); }catch(e){} }
+    var u = document.getElementById('hQrUrl'); if(u) u.textContent = joinUrl.replace(/^https?:\/\//,'');
+  })();
 
   var CATS = []; BANK.forEach(function(q){ if(CATS.indexOf(q.cat)<0) CATS.push(q.cat); });
   var sel = []; try{ sel = JSON.parse(localStorage.getItem('srch-sel')||'[]'); }catch(e){}
