@@ -28,7 +28,7 @@ body.show-hud #hud,#hud:focus-within{opacity:1}
 #hud button:hover{background:rgba(255,255,255,.14)}
 #hud .pos{font-size:14px;font-variant-numeric:tabular-nums;padding:0 6px;color:var(--peach)}
 
-/* ---------- 第 2 頁：即時投票（固定 1920×1080 版面） ---------- */
+/* ---------- 即時投票頁（固定 1920×1080 版面） ---------- */
 #poll{position:absolute;inset:0;background:var(--grad);color:#F3F6F5;padding:128px 128px 160px;display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:72px;align-items:center}
 #poll .kicker{font-size:32px;font-weight:700;letter-spacing:4px;color:var(--peach);margin-bottom:22px}
 #poll h1{font-size:104px;font-weight:900;line-height:1.2;margin-bottom:54px}
@@ -54,7 +54,21 @@ body.show-hud #hud,#hud:focus-within{opacity:1}
 #poll .ctrl .state{font-size:20px;color:#3A1620;margin-right:8px}
 #poll.veil .fill{width:0!important}
 #poll.veil .num{visibility:hidden}
-#poll.nokey .bars,#poll.nokey .total,#poll.nokey .ctrl button{display:none}
+#poll.nokey .bars,#poll.nokey .total,#poll.nokey .ctrl button,#poll.nokey .side,#poll.nokey .explain{display:none}
+#poll .scene{font-size:36px;line-height:1.4;color:var(--ink);background:rgba(255,250,246,.92);padding:20px 32px;border-radius:16px;margin-bottom:24px}
+#poll.quiz h1{font-size:60px;line-height:1.3;margin-bottom:32px}
+#poll.quiz .kicker{margin-bottom:18px}
+#poll.quiz .track{height:72px}
+#poll.quiz .bars{gap:22px}
+#poll.quiz .total{margin-top:26px}
+#poll.quiz .bar{grid-template-columns:minmax(200px,auto) 1fr 220px}
+#poll.quiz .label{font-size:40px}
+#poll .tick{display:none;margin-left:14px;color:var(--ink);background:#FFF6EE;border-radius:999px;padding:0 14px;font-size:.8em}
+#poll .bar{transition:opacity .4s}
+#poll.reveal .bar:not(.ans){opacity:.45}
+#poll.reveal .bar.ans .tick{display:inline-block}
+#poll .explain{margin-top:22px;font-size:34px;font-weight:700;line-height:1.4;color:var(--ink);background:rgba(255,250,246,.92);padding:16px 32px;border-radius:16px;visibility:hidden}
+#poll.reveal .explain{visibility:visible}
 #poll .hands{display:none;gap:32px}
 #poll.nokey .hands{display:flex}
 #poll .hands p{font-size:36px;font-weight:700;color:#FFF6EE;background:rgba(60,25,25,.28);padding:28px 40px;border-radius:16px}
@@ -82,7 +96,7 @@ body.presenter{overflow:auto;background:#1B1513}
 <body>
 <div id="app"></div>
 <script>
-var DECK = {"hasNotes": false, "title": "實證文獻搜尋策略與技巧（完整版）", "footer": "實證文獻搜尋策略與技巧", "numbered": 39, "pollIndex": 1, "poll": {"kicker": "先問大家一個問題", "question": "AI 那麼厲害了，\n還需要學查文獻嗎？", "options": ["需要", "不需要"]}, "slides": [{"id": "cover", "img": "slides/01.webp", "notes": ""}, {"id": "hook", "img": "slides/02.webp", "notes": "", "poll": true}, {"id": "ai2", "img": "slides/03.webp", "notes": ""}, {"id": "ai3", "img": "slides/04.webp", "notes": ""}, {"id": "ai4", "img": "slides/05.webp", "notes": ""}, {"id": "four", "img": "slides/06.webp", "notes": ""}, {"id": "d1", "img": "slides/07.webp", "notes": ""}, {"id": "pico", "img": "slides/08.webp", "notes": ""}, {"id": "qtype", "img": "slides/09.webp", "notes": ""}, {"id": "d2", "img": "slides/10.webp", "notes": ""}, {"id": "fiveA", "img": "slides/11.webp", "notes": ""}, {"id": "pyramid", "img": "slides/12.webp", "notes": ""}, {"id": "dbs", "img": "slides/13.webp", "notes": ""}, {"id": "d3", "img": "slides/14.webp", "notes": ""}, {"id": "terms", "img": "slides/15.webp", "notes": ""}, {"id": "synonyms", "img": "slides/16.webp", "notes": ""}, {"id": "tricks", "img": "slides/17.webp", "notes": ""}, {"id": "atm", "img": "slides/18.webp", "notes": ""}, {"id": "dZu", "img": "slides/19.webp", "notes": ""}, {"id": "boolean", "img": "slides/20.webp", "notes": ""}, {"id": "blocks", "img": "slides/21.webp", "notes": ""}, {"id": "dTiao", "img": "slides/22.webp", "notes": ""}, {"id": "tuning", "img": "slides/23.webp", "notes": ""}, {"id": "filters", "img": "slides/24.webp", "notes": ""}, {"id": "d4", "img": "slides/25.webp", "notes": ""}, {"id": "demo", "img": "slides/26.webp", "notes": ""}, {"id": "demoPico", "img": "slides/27.webp", "notes": ""}, {"id": "demoTerms", "img": "slides/28.webp", "notes": ""}, {"id": "demoSearch", "img": "slides/29.webp", "notes": ""}, {"id": "demoAnd", "img": "slides/30.webp", "notes": ""}, {"id": "demoFilter", "img": "slides/31.webp", "notes": ""}, {"id": "funnel", "img": "slides/32.webp", "notes": ""}, {"id": "demoDownload", "img": "slides/33.webp", "notes": ""}, {"id": "demoAlert", "img": "slides/34.webp", "notes": ""}, {"id": "record", "img": "slides/35.webp", "notes": ""}, {"id": "pitfalls", "img": "slides/36.webp", "notes": ""}, {"id": "tools", "img": "slides/37.webp", "notes": ""}, {"id": "recap", "img": "slides/38.webp", "notes": ""}, {"id": "qa", "img": "slides/39.webp", "notes": ""}]};
+var DECK = {"hasNotes": false, "title": "實證文獻搜尋策略與技巧（完整版）", "footer": "實證文獻搜尋策略與技巧", "numbered": 41, "polls": {"q1": {"kicker": "先問大家一個問題", "question": "AI 那麼厲害了，\n還需要學查文獻嗎？", "options": ["需要", "不需要"]}, "q2": {"quiz": true, "kicker": "換你試試看 ｜ 第 1 題　組", "scene": "聽說醫護值班不能吃鳳梨（旺來），真的會比較忙嗎？", "question": "pineapple 和學名 Ananas comosus\n之間，用 OR 還是 AND？", "options": ["OR", "AND"], "answer": 0, "explain": "俗名和學名是同一個概念：同義詞用 OR"}, "q3": {"quiz": true, "kicker": "換你試試看 ｜ 第 2 題　調", "scene": "聽說醫護值班不能吃鳳梨（旺來），真的會比較忙嗎？", "question": "只查到 17 筆，相關只有 1 篇，\n先做哪一個？", "options": ["補同義詞、放寬概念", "加文章類型篩選器"], "answer": 0, "explain": "太少要擴大；加篩選器只會讓結果更少"}}, "slides": [{"id": "cover", "img": "slides/01.webp"}, {"id": "hook", "poll": "q1"}, {"id": "ai2", "img": "slides/03.webp"}, {"id": "ai3", "img": "slides/04.webp"}, {"id": "ai4", "img": "slides/05.webp"}, {"id": "four", "img": "slides/06.webp"}, {"id": "d1", "img": "slides/07.webp"}, {"id": "pico", "img": "slides/08.webp"}, {"id": "qtype", "img": "slides/09.webp"}, {"id": "d2", "img": "slides/10.webp"}, {"id": "fiveA", "img": "slides/11.webp"}, {"id": "pyramid", "img": "slides/12.webp"}, {"id": "dbs", "img": "slides/13.webp"}, {"id": "d3", "img": "slides/14.webp"}, {"id": "terms", "img": "slides/15.webp"}, {"id": "synonyms", "img": "slides/16.webp"}, {"id": "tricks", "img": "slides/17.webp"}, {"id": "atm", "img": "slides/18.webp"}, {"id": "dZu", "img": "slides/19.webp"}, {"id": "boolean", "img": "slides/20.webp"}, {"id": "blocks", "img": "slides/21.webp"}, {"id": "dTiao", "img": "slides/22.webp"}, {"id": "tuning", "img": "slides/23.webp"}, {"id": "filters", "img": "slides/24.webp"}, {"id": "d4", "img": "slides/25.webp"}, {"id": "demo", "img": "slides/26.webp"}, {"id": "demoPico", "img": "slides/27.webp"}, {"id": "demoTerms", "img": "slides/28.webp"}, {"id": "demoSearch", "img": "slides/29.webp"}, {"id": "demoAnd", "img": "slides/30.webp"}, {"id": "demoFilter", "img": "slides/31.webp"}, {"id": "funnel", "img": "slides/32.webp"}, {"id": "demoDownload", "img": "slides/33.webp"}, {"id": "demoAlert", "img": "slides/34.webp"}, {"id": "record", "img": "slides/35.webp"}, {"id": "pitfalls", "img": "slides/36.webp"}, {"id": "tools", "img": "slides/37.webp"}, {"id": "quiz1", "poll": "q2"}, {"id": "quiz2", "poll": "q3"}, {"id": "recap", "img": "slides/40.webp"}, {"id": "qa", "img": "slides/41.webp"}]};
 </script>
 <script>
 (function(){
@@ -111,7 +125,7 @@ if(isPresenter){
   var fs = 24, t0 = Date.now();
   function thumb(el,i){
     if(i<0||i>=N){ el.innerHTML='<div class="ph" style="background:#2A201D">（結束）</div>'; return; }
-    el.innerHTML = S[i].poll ? '<div class="ph">即時投票<br>'+esc(DECK.poll.question.replace(/\n/g,''))+'</div>' : '<img alt="第 '+(i+1)+' 頁" src="'+S[i].img+'">';
+    el.innerHTML = S[i].poll ? '<div class="ph">即時投票<br>'+esc(DECK.polls[S[i].poll].question.replace(/\n/g,''))+'</div>' : '<img alt="第 '+(i+1)+' 頁" src="'+S[i].img+'">';
   }
   function paintP(){
     thumb(document.getElementById('tCur'),cur); thumb(document.getElementById('tNext'),cur+1);
@@ -142,57 +156,76 @@ function fit(){ var k=Math.min(innerWidth/1920,innerHeight/1080); stage.style.tr
 addEventListener('resize',fit); fit();
 
 var img = document.createElement('img'); img.className='slide'; img.alt=''; stage.appendChild(img);
-var pollEl = null, pollTimer = null, veil = params.get('hide')==='1', pOpen = true, confirmReset = false;
+var pollEl = null, pollTimer = null, pollSeq = 0, curPoll = null, confirmReset = false, PS = {};
+function $(id){ return document.getElementById(id); }
+function pst(id){ if(!PS[id]) PS[id] = {veil: params.get('hide')==='1' || !!DECK.polls[id].quiz, open:true}; return PS[id]; }
 
-function buildPoll(){
-  var P = DECK.poll, joinUrl = new URL('poll/', location.href.split(/[?#]/)[0]).href;
-  pollEl = document.createElement('section'); pollEl.id='poll'; pollEl.className='hidden';
-  pollEl.innerHTML = '<div><p class="kicker">'+esc(P.kicker)+'</p><h1>'+P.question.split('\n').map(esc).join('<br>')+'</h1>'+
-    '<div class="bars">'+P.options.map(function(o,i){return '<div class="bar"><div class="label">'+esc(o)+'</div><div class="track"><div class="fill" id="pf'+i+'"></div></div><div class="num" id="pn'+i+'">0<small>0%</small></div></div>'}).join('')+'</div>'+
+function buildPoll(id, pageNo){
+  if(pollEl) pollEl.remove();
+  var P = DECK.polls[id], joinUrl = new URL('poll/', location.href.split(/[?#]/)[0]).href;
+  curPoll = id; confirmReset = false;
+  pollEl = document.createElement('section'); pollEl.id='poll'; if(P.quiz) pollEl.className='quiz';
+  pollEl.innerHTML = '<div><p class="kicker">'+esc(P.kicker)+'</p>'+(P.scene?'<p class="scene">問題：<b>'+esc(P.scene)+'</b></p>':'')+'<h1>'+P.question.split('\n').map(esc).join('<br>')+'</h1>'+
+    '<div class="bars">'+P.options.map(function(o,i){return '<div class="bar'+(P.answer===i?' ans':'')+'"><div class="label">'+esc(o)+'<span class="tick">✓ 答案</span></div><div class="track"><div class="fill" id="pf'+i+'"></div></div><div class="num" id="pn'+i+'">0<small>0%</small></div></div>'}).join('')+'</div>'+
     '<p class="total">已投票 <b id="pTotal">0</b> 人<span id="pClosed"></span></p>'+
-    '<div class="hands">'+P.options.map(function(o,i){return '<p>覺得'+esc(o)+'　'+(i===0?'舉左手':'舉右手')+'</p>'}).join('')+'</div></div>'+
-    '<aside class="side"><p class="scan">手機掃描投票</p><div class="qrbox"><div id="pQr"></div></div><p class="url">'+esc(joinUrl)+'</p></aside>'+
-    '<p class="foot">'+esc(DECK.footer)+'　｜　'+(DECK.pollIndex+1)+' / '+DECK.numbered+'</p>'+
+    (P.explain?'<p class="explain">'+esc(P.explain)+'</p>':'')+
+    '<div class="hands">'+P.options.map(function(o,i){return '<p>'+(P.quiz?'':'覺得')+esc(o)+'　'+(i===0?'舉左手':'舉右手')+'</p>'}).join('')+'</div></div>'+
+    '<aside class="side"><p class="scan">手機掃描作答</p><div class="qrbox"><div id="pQr"></div></div><p class="url">'+esc(joinUrl)+'</p></aside>'+
+    '<p class="foot">'+esc(DECK.footer)+'　｜　'+(pageNo+1)+' / '+DECK.numbered+'</p>'+
     '<div class="ctrl"><span class="state" id="pSt" role="status"></span><button type="button" id="pVeil"></button><button type="button" id="pOpenBtn"></button><button type="button" id="pReset">清除票數</button></div>';
   stage.appendChild(pollEl);
-  try{ new QRCode(document.getElementById('pQr'),{text:joinUrl,width:420,height:420,correctLevel:QRCode.CorrectLevel.M}); }
-  catch(e){ document.getElementById('pQr').innerHTML='<p>QR 產生失敗，請用下方網址</p>'; }
-  if(!HOST || !apiReady){ pollEl.classList.add('nokey'); document.getElementById('pSt').textContent = apiReady ? '網址未帶主持人金鑰，改用舉手' : '尚未設定後台，改用舉手'; if(!apiReady) pollEl.querySelector('.side').classList.add('hidden'); }
-  ['pVeil','pOpenBtn','pReset'].forEach(function(id){ document.getElementById(id).addEventListener('click',function(e){e.stopPropagation()}); });
-  document.getElementById('pVeil').addEventListener('click',function(){ veil=!veil; labels(); });
-  document.getElementById('pOpenBtn').addEventListener('click',function(){ cmd(pOpen?'close':'open'); });
-  document.getElementById('pReset').addEventListener('click',function(){
-    var b=this; if(!confirmReset){ confirmReset=true; b.textContent='確定清除？再按一次'; setTimeout(function(){confirmReset=false;b.textContent='清除票數'},4000); return; }
+  try{ new QRCode($('pQr'),{text:joinUrl,width:420,height:420,correctLevel:QRCode.CorrectLevel.M}); }
+  catch(e){ $('pQr').innerHTML='<p>QR 產生失敗，請用下方網址</p>'; }
+  if(!HOST || !apiReady){ pollEl.classList.add('nokey'); $('pSt').textContent = apiReady ? '網址未帶主持人金鑰，改用舉手' : '尚未設定後台，改用舉手'; }
+  ['pVeil','pOpenBtn','pReset'].forEach(function(b){ $(b).addEventListener('click',function(e){e.stopPropagation()}); });
+  $('pVeil').addEventListener('click',function(){ var st=pst(id); st.veil=!st.veil; labels(); });
+  $('pOpenBtn').addEventListener('click',function(){ cmd(pst(id).open?'close':'open'); });
+  $('pReset').addEventListener('click',function(){
+    var b=this; if(!confirmReset){ confirmReset=true; b.textContent='確定清除這一題？再按一次'; setTimeout(function(){confirmReset=false;b.textContent='清除票數'},4000); return; }
     confirmReset=false; b.textContent='清除票數'; cmd('reset');
   });
   labels();
 }
 function labels(){
-  pollEl.classList.toggle('veil',veil);
-  document.getElementById('pVeil').textContent = veil?'公布結果':'先隱藏結果';
-  document.getElementById('pOpenBtn').textContent = pOpen?'截止投票':'重新開放';
-  document.getElementById('pClosed').textContent = pOpen?'':'（已截止）';
+  if(!pollEl||!curPoll) return;
+  var P = DECK.polls[curPoll], st = pst(curPoll);
+  pollEl.classList.toggle('veil',st.veil);
+  pollEl.classList.toggle('reveal',!!P.quiz && !st.veil);
+  $('pVeil').textContent = st.veil ? (P.quiz?'公布結果與答案':'公布結果') : '先隱藏結果';
+  $('pOpenBtn').textContent = st.open?'截止投票':'重新開放';
+  $('pClosed').textContent = st.open?'':'（已截止）';
 }
 function post(body){return fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body),redirect:'follow'}).then(function(r){return r.json()})}
-function getState(){return fetch(API+(API.indexOf('?')>-1?'&':'?')+'action=state&key='+encodeURIComponent(HOST)+'&_='+Date.now(),{redirect:'follow'}).then(function(r){return r.json()})}
+function getState(id){return fetch(API+(API.indexOf('?')>-1?'&':'?')+'action=state&poll='+encodeURIComponent(id)+'&key='+encodeURIComponent(HOST)+'&_='+Date.now(),{redirect:'follow'}).then(function(r){return r.json()})}
 function renderPoll(s){
-  var st=document.getElementById('pSt');
-  if(!s||!s.ok||!s.counts){ st.textContent = s&&s.ok ? '主持人金鑰不正確' : '讀取失敗，重試中…'; return; }
-  pOpen=s.open; var total=s.total||0;
-  DECK.poll.options.forEach(function(o,i){ var c=s.counts[i]||0; document.getElementById('pf'+i).style.width=(total?c*100/total:0)+'%'; document.getElementById('pn'+i).innerHTML=c+'<small>'+(total?Math.round(c*100/total):0)+'%</small>'; });
-  document.getElementById('pTotal').textContent=total; st.textContent='即時更新中'; labels();
+  if(!pollEl||!curPoll) return;
+  if(s && s.poll && s.poll!==curPoll) return;          // 別題的回應，略過
+  var st=$('pSt');
+  if(!s||!s.ok||!s.counts){ st.textContent = s&&(s.ok||s.error==='bad_key') ? '主持人金鑰不正確' : '讀取失敗，重試中…'; return; }
+  pst(curPoll).open=s.open; var total=s.total||0;
+  DECK.polls[curPoll].options.forEach(function(o,i){ var c=s.counts[i]||0; $('pf'+i).style.width=(total?c*100/total:0)+'%'; $('pn'+i).innerHTML=c+'<small>'+(total?Math.round(c*100/total):0)+'%</small>'; });
+  $('pTotal').textContent=total;
+  st.textContent = s.active && s.active!==curPoll ? '切換題目中…' : '即時更新中';
+  labels();
 }
-function cmd(c){ post({action:'host',key:HOST,cmd:c}).then(renderPoll).catch(function(){document.getElementById('pSt').textContent='指令沒有送出，請再按一次'}); }
+function cmd(c){ var id=curPoll; post({action:'host',key:HOST,cmd:c,poll:id}).then(renderPoll).catch(function(){ if(curPoll===id) $('pSt').textContent='指令沒有送出，請再按一次'; }); }
 function pollLoop(on){
-  clearTimeout(pollTimer); if(!on||!HOST||!apiReady) return;
-  (function tick(){ getState().then(renderPoll).catch(function(){document.getElementById('pSt').textContent='網路不穩，重試中…'}).then(function(){ if(S[cur].poll) pollTimer=setTimeout(tick,2000); }); })();
+  clearTimeout(pollTimer); var seq=++pollSeq; if(!on||!HOST||!apiReady) return;
+  var id=curPoll, activated=false;
+  function alive(){ return seq===pollSeq && curPoll===id; }
+  function activate(){ return post({action:'host',key:HOST,cmd:'activate',poll:id}).then(function(s){ if(s&&s.ok) activated=true; if(alive()) renderPoll(s); }); }
+  (function tick(){
+    (activated ? getState(id).then(function(s){ if(!alive()) return; if(s&&s.ok&&s.active!==id) activated=false; renderPoll(s); }) : activate())
+      .catch(function(){ if(alive()) $('pSt').textContent='網路不穩，重試中…'; })
+      .then(function(){ if(alive()) pollTimer=setTimeout(tick,2000); });
+  })();
 }
 
 function show(i,silent){
   cur = clamp(i);
   var s = S[cur];
-  if(s.poll){ if(!pollEl) buildPoll(); pollEl.classList.remove('hidden'); img.classList.add('hidden'); pollLoop(true); }
-  else { if(pollEl) pollEl.classList.add('hidden'); img.classList.remove('hidden'); img.src=s.img; pollLoop(false); }
+  if(s.poll){ buildPoll(s.poll,cur); img.classList.add('hidden'); pollLoop(true); }
+  else { if(pollEl){ pollEl.remove(); pollEl=null; } curPoll=null; img.classList.remove('hidden'); img.src=s.img; pollLoop(false); }
   stage.setAttribute('aria-label','第 '+(cur+1)+' 頁，共 '+N+' 頁');
   document.getElementById('hPos').textContent = label(cur);
   if(location.hash!=='#'+(cur+1)) history.replaceState(null,'',location.pathname+location.search+'#'+(cur+1));
