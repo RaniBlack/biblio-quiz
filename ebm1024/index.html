@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>實證文獻搜尋策略與技巧（20261024）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="config.js"></script>
+<style>
+:root{--grad:linear-gradient(100deg,#BF4F6C 0%,#D7755F 52%,#EDBE8E 100%);--cream:#FFFAF6;--ink:#2B1B17;--coral:#C8553A;--peach:#FFE9D6;--line:#EFDDD2;--body:#5A4640;--muted:#7A665F;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:#14100F;color:var(--cream);font-family:var(--sans);overflow:hidden;-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--peach);outline-offset:2px}
+.hidden{display:none!important}
+
+/* ---------- 投影畫面 ---------- */
+#wrap{position:fixed;inset:0;overflow:hidden}
+#stage{position:absolute;left:50%;top:50%;margin:-540px 0 0 -960px;width:1920px;height:1080px;transform-origin:center center;background:var(--cream);overflow:hidden}
+#stage img.slide{position:absolute;inset:0;width:1920px;height:1080px;display:block;user-select:none;-webkit-user-drag:none}
+#hud{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:8px;align-items:center;padding:6px 8px;border-radius:999px;background:rgba(20,16,15,.72);opacity:0;transition:opacity .2s}
+body.show-hud #hud,#hud:focus-within{opacity:1}
+#hud button{border:0;background:transparent;color:var(--cream);padding:6px 12px;border-radius:999px;font-size:14px;font-weight:700}
+#hud button:hover{background:rgba(255,255,255,.14)}
+#hud .pos{font-size:14px;font-variant-numeric:tabular-nums;padding:0 6px;color:var(--peach)}
+
+/* ---------- 即時投票頁（固定 1920×1080 版面） ---------- */
+#poll{position:absolute;inset:0;background:var(--grad);color:#F3F6F5;padding:128px 128px 160px;display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:72px;align-items:center}
+#poll .kicker{font-size:32px;font-weight:700;letter-spacing:4px;color:var(--peach);margin-bottom:22px}
+#poll h1{font-size:104px;font-weight:900;line-height:1.2;margin-bottom:54px}
+#poll .bars{display:flex;flex-direction:column;gap:26px}
+#poll .bar{display:grid;grid-template-columns:minmax(200px,auto) 1fr 250px;align-items:center;gap:28px}
+#poll .label{font-size:48px;font-weight:900;color:#FFF6EE}
+#poll .track{height:88px;background:rgba(60,25,25,.28);border-radius:16px;overflow:hidden}
+#poll .fill{height:100%;width:0;border-radius:16px;background:#FFF6EE;transition:width .6s cubic-bezier(.2,.8,.2,1)}
+#poll .num{font-size:46px;font-weight:900;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;color:#FFF6EE}
+#poll .num small{font-size:27px;font-weight:700;color:var(--peach);margin-left:14px}
+#poll .total{margin-top:34px;font-size:32px;color:#FFF6EE}
+#poll .side{display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center}
+#poll .scan{font-size:36px;font-weight:900;color:#FFF6EE}
+#poll .qrbox{width:100%;background:#fff;border-radius:20px;padding:18px}
+#poll .qrbox img,#poll .qrbox canvas{width:100%!important;height:auto!important;display:block}
+#poll .qrbox p{color:var(--ink);font-size:24px}
+#poll .url{font-size:20px;color:#3A1620;word-break:break-all}
+#poll .foot{position:absolute;left:128px;bottom:64px;font-size:24px;color:#FFF6EE}
+#poll .ctrl{position:absolute;right:128px;bottom:52px;display:flex;gap:12px;align-items:center;opacity:.55;transition:opacity .2s}
+#poll .ctrl:hover,#poll .ctrl:focus-within{opacity:1}
+#poll .ctrl button{padding:10px 20px;border-radius:999px;border:0;background:rgba(60,25,25,.38);color:#FFF6EE;font-size:20px;font-weight:700}
+#poll .ctrl button:hover{background:rgba(60,25,25,.62)}
+#poll .ctrl .state{font-size:20px;color:#3A1620;margin-right:8px}
+#poll.veil .fill{width:0!important}
+#poll.veil .num{visibility:hidden}
+#poll.nokey .bars,#poll.nokey .total,#poll.nokey .ctrl button,#poll.nokey .side,#poll.nokey .explain{display:none}
+#poll .scene{font-size:36px;line-height:1.4;color:var(--ink);background:rgba(255,250,246,.92);padding:20px 32px;border-radius:16px;margin-bottom:24px}
+#poll.quiz h1{font-size:60px;line-height:1.3;margin-bottom:32px}
+#poll.quiz .kicker{margin-bottom:18px}
+#poll.quiz .track{height:72px}
+#poll.quiz .bars{gap:22px}
+#poll.quiz .total{margin-top:26px}
+#poll.quiz .bar{grid-template-columns:minmax(200px,auto) 1fr 220px}
+#poll.quiz .label{font-size:40px}
+#poll .tick{display:none;margin-left:14px;color:var(--ink);background:#FFF6EE;border-radius:999px;padding:0 14px;font-size:.8em}
+#poll .bar{transition:opacity .4s}
+#poll.reveal .bar:not(.ans){opacity:.45}
+#poll.reveal .bar.ans .tick{display:inline-block}
+#poll .explain{margin-top:22px;font-size:34px;font-weight:700;line-height:1.4;color:var(--ink);background:rgba(255,250,246,.92);padding:16px 32px;border-radius:16px;visibility:hidden}
+#poll.reveal .explain{visibility:visible}
+#poll .hands{display:none;gap:24px;flex-wrap:wrap}
+#poll.nokey .hands{display:flex}
+#poll .hands p{font-size:36px;font-weight:700;color:#FFF6EE;background:rgba(60,25,25,.28);padding:28px 40px;border-radius:16px}
+
+
+/* ---------- 翻卡頁（固定 1920×1080 版面，位置比照簡報） ---------- */
+#flip{position:absolute;inset:0;background:var(--cream);color:var(--ink)}
+#flip .kicker{position:absolute;left:128px;top:128px;font-size:32px;font-weight:700;letter-spacing:2px;color:var(--coral)}
+#flip h2{position:absolute;left:128px;top:176px;font-size:80px;font-weight:900;line-height:1.15}
+#flip .fc{position:absolute;top:300px;width:816px;height:540px;perspective:1800px;cursor:pointer}
+#flip .inner{position:relative;width:100%;height:100%;transition:transform .7s cubic-bezier(.3,.7,.2,1);transform-style:preserve-3d}
+#flip .fc.on .inner{transform:rotateY(180deg)}
+#flip .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:#fff;border:1px solid var(--line);border-radius:16px;padding:48px;display:flex;flex-direction:column;gap:20px}
+#flip .back{transform:rotateY(180deg)}
+#flip .lab{font-size:24px;font-weight:700;color:var(--muted)}
+#flip h3{font-size:40px;font-weight:700}
+#flip .q{font-size:56px;font-weight:900;line-height:1.3}
+#flip .hint{margin-top:auto;font-size:24px;color:var(--muted)}
+#flip ul{font-size:32px;color:var(--body);line-height:1.6;padding-left:1.2em}
+#flip .src{position:absolute;left:128px;top:868px;width:1664px;font-size:24px;color:var(--muted)}
+#flip .foot{position:absolute;left:128px;bottom:64px;font-size:24px;color:var(--muted)}
+#flip .sign{position:absolute;right:128px;bottom:64px;font-size:24px;color:var(--muted)}
+#stage .mask{position:absolute;background:var(--cream);transition:opacity .5s}
+#stage .mask.gone{opacity:0}
+#flip .fb{position:absolute;height:72px;perspective:1400px;cursor:pointer}
+#flip .fb .inner{position:relative;width:100%;height:100%;transition:transform .6s cubic-bezier(.3,.7,.2,1);transform-style:preserve-3d}
+#flip .fb.on .inner{transform:rotateX(180deg)}
+#flip .bf{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:8px;display:flex;align-items:center;justify-content:center;gap:16px}
+#flip .bf.back{transform:rotateX(180deg)}
+#flip .bf b{font-size:32px;font-weight:700}
+#flip .bf span{font-size:28px}
+#flip .big{font-size:72px;font-weight:900;line-height:1.25;text-align:center}
+#flip .desc{font-size:32px;line-height:1.5;color:var(--body)}
+#flip .call{position:absolute;left:128px;width:1664px;padding:28px 40px;background:#FBEDE4;border-left:8px solid var(--coral);border-radius:16px;font-size:32px}
+#flip .note{position:absolute;left:128px;top:839px;width:1664px;font-size:32px;color:var(--body);text-align:center}
+@media (prefers-reduced-motion:reduce){#flip .inner,#stage .mask{transition:none}}
+
+/* ---------- 講者視窗 ---------- */
+body.presenter{overflow:auto;background:#1B1513}
+#pv{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:20px;padding:20px;min-height:100%}
+#pv .col{display:flex;flex-direction:column;gap:14px;min-width:0}
+#pv .thumb{width:100%;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden;position:relative}
+#pv .thumb img{width:100%;height:100%;display:block}
+#pv .thumb .ph{position:absolute;inset:0;display:grid;place-items:center;background:var(--grad);font-size:22px;font-weight:900;text-align:center;padding:12px}
+#pv .next{width:55%}
+#pv h2{font-size:14px;letter-spacing:.14em;color:var(--peach);font-weight:700}
+#pv .bar2{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#pv .bar2 button{border:1px solid #4A3A35;background:#2A201D;color:var(--cream);padding:10px 18px;border-radius:10px;font-size:16px;font-weight:700}
+#pv .bar2 button:hover{border-color:var(--peach)}
+#pv .clock{margin-left:auto;font-size:28px;font-weight:900;font-variant-numeric:tabular-nums}
+#pv .clock small{font-size:14px;color:var(--muted);font-weight:500;margin-right:8px}
+#pv .notes{flex:1;background:#2A201D;border-radius:12px;padding:22px 24px;font-size:24px;line-height:1.7;white-space:pre-wrap;overflow:auto;min-height:240px}
+#pv .size{display:flex;gap:6px}
+@media (max-width:900px){#pv{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){#poll .fill,#hud{transition:none}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+var DECK = {"hasNotes": false, "title": "實證文獻搜尋策略與技巧（20261024）", "footer": "實證文獻搜尋策略與技巧", "numbered": 54, "polls": {"q1": {"kicker": "先問大家一個問題", "question": "AI 那麼厲害了，\n還需要學查文獻嗎？", "options": ["需要", "不需要"]}, "q4": {"quiz": true, "kicker": "換你判斷 ｜ 拆概念", "question": "蔓越莓是否預防女性泌尿道感染？\n這是哪一類問題？", "options": ["A 治療 Therapy", "B 診斷 Diagnosis", "C 預後 Prognosis", "D 病因 Etiology"], "answer": 0, "explain": "預防也算治療：問「介入有沒有效」→ 首選 RCT、系統性回顧"}, "q2": {"quiz": true, "kicker": "換你試試看 ｜ 第 1 題　組", "scene": "聽說醫護值班不能吃鳳梨（旺來），真的會比較忙嗎？", "question": "pineapple 和學名 Ananas comosus\n之間，用 OR 還是 AND？", "options": ["OR", "AND"], "answer": 0, "explain": "俗名和學名是同一個概念：同義詞用 OR"}, "q3": {"quiz": true, "kicker": "換你試試看 ｜ 第 2 題　調", "scene": "聽說醫護值班不能吃鳳梨（旺來），真的會比較忙嗎？", "question": "只查到 17 筆，相關只有 1 篇，\n先做哪一個？", "options": ["補同義詞、放寬概念", "加文章類型篩選器"], "answer": 0, "explain": "太少要擴大；加篩選器只會讓結果更少"}}, "flips": {"trunc": {"overlay": true, "cards": [{"num": "1", "title": "字尾變化多、字根會變", "verdict": "用切截字", "ex": "cranberry → cranberries\n寫成 cranberr*", "color": "#C8553A", "rect": [128, 553, 539, 330]}, {"num": "2", "title": "只有單複數一兩種寫法", "verdict": "直接列出來", "ex": "female、females", "color": "#2B1B17", "rect": [691, 553, 539, 330]}, {"num": "3", "title": "字根太短", "verdict": "不要用", "ex": "* 前至少 4 個字元\n例：wom* 不行", "color": "#B23A5E", "rect": [1253, 553, 539, 330]}]}, "terms": {"kicker": "找 ｜ 找同義詞", "title": "找同義詞：自由詞與主題詞，兩者並用", "sign": "花蓮慈濟醫院　｜　陳俐羽", "top": 325, "h": 410, "callTop": 771, "callB": "主題詞求準，自由詞求全", "callT": "：兩者互補，同一概念以 OR 結合。", "cards": [{"front": "自由詞\nKeyword", "title": "自由詞 Keyword", "desc": "比對作者在標題、摘要裡用的字", "points": ["可找到新進、未標引或漏標的文章", "需自己想同義詞、縮寫、拼法變化", "例：cranberry、cranberries"]}, {"front": "主題詞\nMeSH / Emtree", "title": "主題詞 MeSH / Emtree", "desc": "醫學主題詞：依文章探討的「主題」標引", "points": ["統一不同用詞，減少漏查", "階層結構，預設含下位詞（explode）", "例：\"Vaccinium macrocarpon\"[Mesh]"]}]}, "pyramid": {"kicker": "找 ｜ 找資料庫", "tops": [317, 399, 481, 563, 645, 797], "noteTop": 893, "cx": 1040, "extra": "<div style=\"position:absolute; left:128px; top:756px; width:1664px; height:0; border-top:3px dashed #7A665F\"><\/div>\n<div style=\"position:absolute; left:348px; top:317px; width:5px; height:400px; background:#8E3550; border-radius:3px\"><\/div>\n<div style=\"position:absolute; left:348px; top:797px; width:5px; height:72px; background:#7A665F; border-radius:3px\"><\/div>\n<div style=\"position:absolute; left:128px; top:470px; width:200px; display:flex; flex-direction:column; gap:6px\"><p style=\"font-family:'Noto Sans TC', Arial, sans-serif; font-size:40px; font-weight:900; color:#8E3550\">二手資料<\/p><p style=\"font-family:'Noto Sans TC', Arial, sans-serif; font-size:24px; line-height:1.4; color:#5A4640\">整理、評讀過<\/p><\/div>\n<div style=\"position:absolute; left:128px; top:807px; width:200px; display:flex; flex-direction:column\"><p style=\"font-family:'Noto Sans TC', Arial, sans-serif; font-size:40px; font-weight:900; color:#7A665F\">一手資料<\/p><\/div>\n", "title": "6S 證據金字塔：由上往下找", "sign": "花蓮慈濟醫院　｜　陳俐羽", "note": "越上層：越省時、越已經過整合與評讀　｜　越下層：越新、越原始、數量越多，但需自行評讀", "bars": [{"name": "Systems 系統", "ex": "整合於病歷的決策支援", "w": 560, "bg": "#2B1B17", "c1": "#F3F6F5", "c2": "#F3DDD0"}, {"name": "Summaries 摘要", "ex": "UpToDate、DynaMed", "w": 712, "bg": "#8E3550", "c1": "#F3F6F5", "c2": "#FFF1E8"}, {"name": "Synopses of syntheses", "ex": "系統性回顧的精要評論", "w": 864, "bg": "#C8553A", "c1": "#FFFAF6", "c2": "#FBEDE4"}, {"name": "Syntheses 系統性回顧", "ex": "Cochrane Library", "w": 1016, "bg": "#E08C6C", "c1": "#2B1B17", "c2": "#2B1B17"}, {"name": "Synopses of studies", "ex": "單篇研究的精要評論", "w": 1168, "bg": "#F2BE9F", "c1": "#2B1B17", "c2": "#2B1B17"}, {"name": "Studies 原始研究", "ex": "PubMed、Embase、CINAHL", "w": 1320, "bg": "#FBE3D2", "c1": "#2B1B17", "c2": "#2B1B17"}]}, "ai2": {"kicker": "開場 ｜ AI 時代的文獻搜尋", "title": "國際實證組織怎麼說？", "sign": "花蓮慈濟醫院　｜　陳俐羽", "source": "資料來源：Cochrane Handbook for Systematic Reviews of Interventions, Chapter 4；Position statement on AI use in evidence synthesis (2025)", "cards": [{"label": "實證醫學聖經", "title": "Cochrane Handbook 第 4 章", "color": "#2B1B17", "question": "檢索要做到\n哪 4 件事？", "points": ["查多個資料庫，不只一個", "主題詞加自由詞，力求完整", "完整記錄並報告檢索策略", "建議資訊專家、館員參與"]}, {"label": "Cochrane、JBI 等國際實證組織", "title": "2025 AI 使用聯合立場聲明", "color": "#C8553A", "question": "AI 可以用嗎？\n條件是什麼？", "points": ["AI 可以用，但人負最終責任", "說明用了什麼工具、哪一步", "不得損及方法的嚴謹度", "使用前確認工具適用、可信"]}]}}, "reveals": {"four": [[[76, 668, 444, 256]], [[517, 668, 444, 256]], [[959, 668, 444, 256]], [[1400, 668, 444, 256]]]}, "slides": [{"id": "cover", "img": "slides/01.webp"}, {"id": "hook", "poll": "q1"}, {"id": "ai2", "flip": "ai2", "img": "slides/03.webp"}, {"id": "ai3", "img": "slides/04.webp"}, {"id": "ai4", "img": "slides/05.webp"}, {"id": "fiveA", "img": "slides/06.webp"}, {"id": "four", "reveal": "four", "img": "slides/07.webp"}, {"id": "d1", "img": "slides/08.webp"}, {"id": "pico", "img": "slides/09.webp"}, {"id": "qtype", "img": "slides/10.webp"}, {"id": "qtypeQuiz", "poll": "q4"}, {"id": "d2", "img": "slides/12.webp"}, {"id": "pyramid", "flip": "pyramid", "img": "slides/13.webp"}, {"id": "dbs", "img": "slides/14.webp"}, {"id": "d3", "img": "slides/15.webp"}, {"id": "terms", "flip": "terms", "img": "slides/16.webp"}, {"id": "synFind", "img": "slides/17.webp"}, {"id": "meshWhere", "img": "slides/18.webp"}, {"id": "meshPage", "img": "slides/19.webp"}, {"id": "aiIdea", "img": "slides/20.webp"}, {"id": "synonyms", "img": "slides/21.webp"}, {"id": "trunc", "flip": "trunc", "img": "slides/22.webp"}, {"id": "synTrunc", "img": "slides/23.webp"}, {"id": "atm", "img": "slides/24.webp"}, {"id": "atmDetails", "img": "slides/25.webp"}, {"id": "phrase", "img": "slides/26.webp"}, {"id": "phraseDemo", "img": "slides/27.webp"}, {"id": "dZu", "img": "slides/28.webp"}, {"id": "boolean", "img": "slides/29.webp"}, {"id": "synReady", "img": "slides/30.webp"}, {"id": "advWhere", "img": "slides/31.webp"}, {"id": "histP", "img": "slides/32.webp"}, {"id": "histI", "img": "slides/33.webp"}, {"id": "histO", "img": "slides/34.webp"}, {"id": "histAnd", "img": "slides/35.webp"}, {"id": "blocks", "img": "slides/36.webp"}, {"id": "dTiao", "img": "slides/37.webp"}, {"id": "tuning", "img": "slides/38.webp"}, {"id": "tricks", "img": "slides/39.webp"}, {"id": "allFieldsTest", "img": "slides/40.webp"}, {"id": "filters", "img": "slides/41.webp"}, {"id": "filterWhere", "img": "slides/42.webp"}, {"id": "demoFilter", "img": "slides/43.webp"}, {"id": "d4", "img": "slides/44.webp"}, {"id": "demoDownload", "img": "slides/45.webp"}, {"id": "demoAlert", "img": "slides/46.webp"}, {"id": "record", "img": "slides/47.webp"}, {"id": "pitfalls", "img": "slides/48.webp"}, {"id": "tools", "img": "slides/49.webp"}, {"id": "funnel", "img": "slides/50.webp"}, {"id": "quiz1", "poll": "q2"}, {"id": "quiz2", "poll": "q3"}, {"id": "recap", "img": "slides/53.webp"}, {"id": "qa", "img": "slides/54.webp"}]};
+</script>
+<script>
+(function(){
+'use strict';
+var S = DECK.slides, N = S.length;
+var params = new URLSearchParams(location.search);
+var HOST = params.get('host') || '';
+var API = params.get('api') || (typeof API_URL==='string' ? API_URL : '');
+var apiReady = !!API && API.indexOf('請貼上') < 0;
+var isPresenter = params.has('presenter');
+var app = document.getElementById('app');
+var chan = null; try{ chan = new BroadcastChannel('deck-sync'); }catch(e){}
+function kickerHtml(k){var m=/^([拆找組調]) ｜ (.*)$/.exec(k||'');if(!m)return '<p class="kicker">'+esc(k)+'</p>';var num=/^找資料庫/.test(m[2])?'1':/^找同義詞/.test(m[2])?'2':'';var c={'拆':'#A8425E','找':'#BF4F6C','組':'#C8553A','調':'#D2694F'}[m[1]];return '<div style="position:absolute;left:0;top:0;width:180px;height:180px;background:'+c+';border-radius:0 0 180px 0"></div><p style="position:absolute;left:26px;top:22px;font-size:92px;font-weight:900;line-height:1;color:#FFFAF6">'+m[1]+'</p>'+(num?'<p style="position:absolute;left:206px;top:47px;width:60px;height:60px;box-sizing:border-box;border:4px solid '+c+';border-radius:30px;font-size:38px;font-weight:900;line-height:52px;text-align:center;color:'+c+'">'+num+'</p>':'')+'<p style="position:absolute;left:'+(num?282:206)+'px;top:50px;font-size:44px;font-weight:900;line-height:1.2;color:'+c+'">'+esc(m[2])+'</p>';}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function clamp(i){return Math.max(0,Math.min(N-1,i))}
+function fromHash(){var n=parseInt(location.hash.replace('#',''),10);return isNaN(n)?0:clamp(n-1)}
+var cur = fromHash();
+function label(i){return (i+1)+' / '+N}
+
+/* ================= 講者視窗 ================= */
+if(isPresenter){
+  document.body.classList.add('presenter');
+  document.title = '講者視窗｜'+DECK.title;
+  app.innerHTML = '<div id="pv"><div class="col"><h2>目前</h2><div class="thumb" id="tCur"></div><div class="bar2"><button id="bPrev" type="button">← 上一頁</button><button id="bNext" type="button">下一頁 →</button><span class="clock"><small>已進行</small><span id="timer">00:00</span></span></div><div class="bar2"><button id="bReset" type="button">計時歸零</button><span id="pos" style="color:var(--peach);font-weight:700"></span></div><h2>下一頁</h2><div class="thumb next" id="tNext"></div></div>'+
+    '<div class="col"><div class="bar2"><h2>講稿</h2><span class="size" style="margin-left:auto"><button id="bSm" type="button" aria-label="講稿字縮小">A−</button><button id="bLg" type="button" aria-label="講稿字放大">A＋</button></span></div><div class="notes" id="notes"></div></div></div>';
+  if(!DECK.hasNotes){ var pvEl=document.getElementById('pv'); pvEl.style.gridTemplateColumns='1fr'; pvEl.style.maxWidth='900px'; pvEl.style.margin='0 auto'; pvEl.children[1].classList.add('hidden'); }
+  var fs = 24, t0 = Date.now();
+  function thumb(el,i){
+    if(i<0||i>=N){ el.innerHTML='<div class="ph" style="background:#2A201D">（結束）</div>'; return; }
+    el.innerHTML = S[i].poll ? '<div class="ph">即時投票<br>'+esc(DECK.polls[S[i].poll].question.replace(/\n/g,''))+'</div>' : '<img alt="第 '+(i+1)+' 頁" src="'+S[i].img+'">';
+  }
+  function paintP(){
+    thumb(document.getElementById('tCur'),cur); thumb(document.getElementById('tNext'),cur+1);
+    document.getElementById('notes').textContent = S[cur].notes || '（這一頁沒有講稿）';
+    document.getElementById('notes').scrollTop = 0;
+    document.getElementById('pos').textContent = '第 '+label(cur)+' 頁';
+  }
+  function goP(i){ cur = clamp(i); paintP(); if(chan) chan.postMessage({go:cur,from:'p'}); }
+  if(chan) chan.onmessage = function(e){ if(e.data && typeof e.data.go==='number' && e.data.from!=='p'){ cur = clamp(e.data.go); paintP(); } };
+  document.getElementById('bPrev').onclick=function(){goP(cur-1)}; document.getElementById('bNext').onclick=function(){goP(cur+1)};
+  document.getElementById('bReset').onclick=function(){t0=Date.now()};
+  document.getElementById('bSm').onclick=function(){fs=Math.max(16,fs-2);document.getElementById('notes').style.fontSize=fs+'px'};
+  document.getElementById('bLg').onclick=function(){fs=Math.min(48,fs+2);document.getElementById('notes').style.fontSize=fs+'px'};
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){e.preventDefault();goP(cur+1)}
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();goP(cur-1)}
+  });
+  setInterval(function(){var s=Math.floor((Date.now()-t0)/1000),m=Math.floor(s/60);document.getElementById('timer').textContent=(m<10?'0':'')+m+':'+(s%60<10?'0':'')+(s%60)},500);
+  paintP(); if(chan) chan.postMessage({hello:1,from:'p'});
+  return;
+}
+
+/* ================= 投影畫面 ================= */
+app.innerHTML = '<div id="wrap"><div id="stage" role="img" aria-live="polite"></div></div>'+
+  '<div id="hud"><button id="hPrev" type="button" aria-label="上一頁">←</button><span class="pos" id="hPos"></span><button id="hNext" type="button" aria-label="下一頁">→</button><button id="hNotes" type="button">'+(DECK.hasNotes?'講者視窗':'下一頁預覽')+'</button><button id="hFull" type="button">全螢幕</button></div>';
+var stage = document.getElementById('stage');
+function fit(){ var k=Math.min(innerWidth/1920,innerHeight/1080); stage.style.transform='scale('+k+')'; }
+addEventListener('resize',fit); fit();
+
+var prevShown = null;
+var img = document.createElement('img'); img.className='slide'; img.alt=''; stage.appendChild(img);
+var pollEl = null, pollTimer = null, pollSeq = 0, curPoll = null, confirmReset = false, PS = {};
+function $(id){ return document.getElementById(id); }
+function pst(id){ if(!PS[id]) PS[id] = {veil: params.get('hide')==='1' || !!DECK.polls[id].quiz, open:true}; return PS[id]; }
+
+function buildPoll(id, pageNo){
+  if(pollEl) pollEl.remove();
+  var P = DECK.polls[id], joinUrl = new URL('poll/', location.href.split(/[?#]/)[0]).href;
+  curPoll = id; confirmReset = false;
+  pollEl = document.createElement('section'); pollEl.id='poll'; if(P.quiz) pollEl.className='quiz';
+  pollEl.innerHTML = '<div><p class="kicker">'+esc(P.kicker)+'</p>'+(P.scene?'<p class="scene">問題：<b>'+esc(P.scene)+'</b></p>':'')+'<h1>'+P.question.split('\n').map(esc).join('<br>')+'</h1>'+
+    '<div class="bars">'+P.options.map(function(o,i){return '<div class="bar'+(P.answer===i?' ans':'')+'"><div class="label">'+esc(o)+'<span class="tick">✓ 答案</span></div><div class="track"><div class="fill" id="pf'+i+'"></div></div><div class="num" id="pn'+i+'">0<small>0%</small></div></div>'}).join('')+'</div>'+
+    '<p class="total">已投票 <b id="pTotal">0</b> 人<span id="pClosed"></span></p>'+
+    (P.explain?'<p class="explain">'+esc(P.explain)+'</p>':'')+
+    '<div class="hands">'+P.options.map(function(o,i){return '<p>'+(P.options.length>2?esc(o):(P.quiz?'':'覺得')+esc(o)+'　'+(i===0?'舉左手':'舉右手'))+'</p>'}).join('')+'</div></div>'+
+    '<aside class="side"><p class="scan">手機掃描作答</p><div class="qrbox"><div id="pQr"></div></div><p class="url">'+esc(joinUrl)+'</p></aside>'+
+    '<p class="foot">'+esc(DECK.footer)+'　｜　'+(pageNo+1)+' / '+DECK.numbered+'</p>'+
+    '<div class="ctrl"><span class="state" id="pSt" role="status"></span><button type="button" id="pVeil"></button><button type="button" id="pOpenBtn"></button><button type="button" id="pReset">清除票數</button></div>';
+  stage.appendChild(pollEl);
+  try{ new QRCode($('pQr'),{text:joinUrl,width:420,height:420,correctLevel:QRCode.CorrectLevel.M}); }
+  catch(e){ $('pQr').innerHTML='<p>QR 產生失敗，請用下方網址</p>'; }
+  if(!HOST || !apiReady){ pollEl.classList.add('nokey'); $('pSt').textContent = apiReady ? '網址未帶主持人金鑰，改用舉手' : '尚未設定後台，改用舉手'; }
+  ['pVeil','pOpenBtn','pReset'].forEach(function(b){ $(b).addEventListener('click',function(e){e.stopPropagation()}); });
+  $('pVeil').addEventListener('click',function(){ var st=pst(id); st.veil=!st.veil; labels(); });
+  $('pOpenBtn').addEventListener('click',function(){ cmd(pst(id).open?'close':'open'); });
+  $('pReset').addEventListener('click',function(){
+    var b=this; if(!confirmReset){ confirmReset=true; b.textContent='確定清除這一題？再按一次'; setTimeout(function(){confirmReset=false;b.textContent='清除票數'},4000); return; }
+    confirmReset=false; b.textContent='清除票數'; cmd('reset');
+  });
+  labels();
+}
+function labels(){
+  if(!pollEl||!curPoll) return;
+  var P = DECK.polls[curPoll], st = pst(curPoll);
+  pollEl.classList.toggle('veil',st.veil);
+  pollEl.classList.toggle('reveal',!!P.quiz && !st.veil);
+  $('pVeil').textContent = st.veil ? (P.quiz?'公布結果與答案':'公布結果') : '先隱藏結果';
+  $('pOpenBtn').textContent = st.open?'截止投票':'重新開放';
+  $('pClosed').textContent = st.open?'':'（已截止）';
+}
+function post(body){return fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body),redirect:'follow'}).then(function(r){return r.json()})}
+function getState(id){return fetch(API+(API.indexOf('?')>-1?'&':'?')+'action=state&poll='+encodeURIComponent(id)+'&key='+encodeURIComponent(HOST)+'&_='+Date.now(),{redirect:'follow'}).then(function(r){return r.json()})}
+function renderPoll(s){
+  if(!pollEl||!curPoll) return;
+  if(s && s.poll && s.poll!==curPoll) return;          // 別題的回應，略過
+  var st=$('pSt');
+  if(!s||!s.ok||!s.counts){ st.textContent = s&&(s.ok||s.error==='bad_key') ? '主持人金鑰不正確' : '讀取失敗，重試中…'; return; }
+  pst(curPoll).open=s.open; var total=s.total||0;
+  DECK.polls[curPoll].options.forEach(function(o,i){ var c=s.counts[i]||0; $('pf'+i).style.width=(total?c*100/total:0)+'%'; $('pn'+i).innerHTML=c+'<small>'+(total?Math.round(c*100/total):0)+'%</small>'; });
+  $('pTotal').textContent=total;
+  st.textContent = s.active && s.active!==curPoll ? '切換題目中…' : '即時更新中';
+  labels();
+}
+function cmd(c){ var id=curPoll; post({action:'host',key:HOST,cmd:c,poll:id}).then(renderPoll).catch(function(){ if(curPoll===id) $('pSt').textContent='指令沒有送出，請再按一次'; }); }
+function pollLoop(on){
+  clearTimeout(pollTimer); var seq=++pollSeq; if(!on||!HOST||!apiReady) return;
+  var id=curPoll, activated=false;
+  function alive(){ return seq===pollSeq && curPoll===id; }
+  function activate(){ return post({action:'host',key:HOST,cmd:'activate',poll:id}).then(function(s){ if(s&&s.ok) activated=true; if(alive()) renderPoll(s); }); }
+  (function tick(){
+    (activated ? getState(id).then(function(s){ if(!alive()) return; if(s&&s.ok&&s.active!==id) activated=false; renderPoll(s); }) : activate())
+      .catch(function(){ if(alive()) $('pSt').textContent='網路不穩，重試中…'; })
+      .then(function(){ if(alive()) pollTimer=setTimeout(tick,2000); });
+  })();
+}
+
+
+/* ================= 翻卡頁 ================= */
+var flipEl=null, FS={};   // FS[slide index] = 已翻開的卡片
+function buildFlip(i){
+  if(flipEl) flipEl.remove();
+  var D=DECK.flips[S[i].flip]; var items=D.cards||D.bars; if(!FS[i]) FS[i]=items.map(function(){return false});
+  flipEl=document.createElement('section'); flipEl.id='flip';
+  if(D.overlay){ flipEl.style.background='transparent';
+    flipEl.innerHTML=D.cards.map(function(c,k){
+      var r=c.rect, bt='border-top:8px solid '+c.color;
+      return '<div class="fc'+(FS[i][k]?' on':'')+'" data-k="'+k+'" role="button" tabindex="0" aria-pressed="'+FS[i][k]+'" aria-label="'+esc(c.title)+'" style="left:'+r[0]+'px;top:'+r[1]+'px;width:'+r[2]+'px;height:'+r[3]+'px"><div class="inner">'+
+        '<div class="face" style="'+bt+';justify-content:center;align-items:center;padding:32px 36px"><p style="font-size:96px;font-weight:900;line-height:1;color:'+c.color+'">'+esc(c.num)+'</p><h3 style="text-align:center;line-height:1.3">'+esc(c.title)+'</h3></div>'+
+        '<div class="face back" style="'+bt+';padding:32px 36px;gap:14px"><p class="lab" style="font-size:28px">'+esc(c.num)+'</p><h3 style="font-size:36px;line-height:1.3">'+esc(c.title)+'</h3><p style="font-size:32px;font-weight:700;color:'+c.color+'">'+esc(c.verdict)+'</p><p style="font-size:28px;line-height:1.5;color:var(--body)">'+c.ex.split('\n').map(esc).join('<br>')+'</p></div></div></div>';
+    }).join('');
+  } else
+  flipEl.innerHTML=''+kickerHtml(D.kicker)+'<h2>'+esc(D.title)+'</h2>'+
+    (D.bars ? D.bars.map(function(b,k){
+      var face=function(back){ return '<div class="bf'+(back?' back':'')+'" style="background:'+b.bg+'"><b style="color:'+b.c1+'">'+esc(b.name)+'</b>'+(back?'<span style="color:'+b.c2+'">'+esc(b.ex)+'</span>':'')+'</div>'; };
+      return '<div class="fb fc'+(FS[i][k]?' on':'')+'" data-k="'+k+'" role="button" tabindex="0" aria-pressed="'+FS[i][k]+'" aria-label="'+esc(b.name)+'" style="left:'+((D.cx||960)-b.w/2)+'px;top:'+(D.tops?D.tops[k]:317+k*82)+'px;width:'+b.w+'px"><div class="inner">'+face(false)+face(true)+'</div></div>';
+    }).join('')+(D.extra||'')+'<p class="note"'+(D.noteTop?' style="top:'+D.noteTop+'px"':'')+'>'+esc(D.note)+'</p>' : '')+
+    (D.cards||[]).map(function(c,k){
+      var pos='left:'+(128+k*848)+'px'+(D.top?';top:'+D.top+'px':'')+(D.h?';height:'+D.h+'px':'');
+      if(c.front){   // 正面只有大標題，背面是說明
+        return '<div class="fc'+(FS[i][k]?' on':'')+'" data-k="'+k+'" role="button" tabindex="0" aria-pressed="'+FS[i][k]+'" aria-label="'+esc(c.title)+'" style="'+pos+'"><div class="inner">'+
+          '<div class="face" style="justify-content:center;align-items:center"><p class="big">'+c.front.split('\n').map(esc).join('<br>')+'</p><p class="hint" style="position:absolute;left:48px;bottom:32px">點一下翻開</p></div>'+
+          '<div class="face back"><h3>'+esc(c.title)+'</h3><p class="desc">'+esc(c.desc)+'</p><ul>'+c.points.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul></div></div></div>';
+      }
+      var head='<p class="lab">'+esc(c.label)+'</p><h3 style="color:'+c.color+'">'+esc(c.title)+'</h3>';
+      return '<div class="fc'+(FS[i][k]?' on':'')+'" data-k="'+k+'" role="button" tabindex="0" aria-pressed="'+FS[i][k]+'" aria-label="'+esc(c.title)+'：'+esc(c.question.replace(/\n/g,''))+'" style="left:'+(128+k*848)+'px"><div class="inner">'+
+        '<div class="face" style="border-top:8px solid '+c.color+'">'+head+'<p class="q">'+c.question.split('\n').map(esc).join('<br>')+'</p><p class="hint">點一下翻開</p></div>'+
+        '<div class="face back" style="border-top:8px solid '+c.color+'">'+head+'<ul>'+c.points.map(function(p){return '<li>'+esc(p)+'</li>'}).join('')+'</ul></div></div></div>';
+    }).join('')+
+    (D.callB?'<p class="call" style="top:'+D.callTop+'px"><b>'+esc(D.callB)+'</b>'+esc(D.callT)+'</p>':'')+
+    (D.source?'<p class="src">'+esc(D.source)+'</p>':'')+'<p class="foot">'+esc(DECK.footer)+'　｜　'+(i+1)+' / '+DECK.numbered+'</p><p class="sign">'+esc(D.sign||'')+'</p>';
+  stage.appendChild(flipEl);
+  [].forEach.call(flipEl.querySelectorAll('.fc'),function(el){
+    function tog(e){ e.stopPropagation(); var k=+el.getAttribute('data-k'); FS[i][k]=!FS[i][k]; paintFlip(i); }
+    el.addEventListener('click',tog);
+    el.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); tog(e); } });
+  });
+}
+function paintFlip(i){ [].forEach.call(flipEl.querySelectorAll('.fc'),function(el,k){ el.classList.toggle('on',FS[i][k]); el.setAttribute('aria-pressed',String(FS[i][k])); }); }
+/* ================= 依序揭曉頁：在簡報圖片上蓋同底色的遮罩，按一次掀開一塊 ================= */
+var masks=[], RS={};
+function buildReveal(i){
+  clearMasks(); var steps=DECK.reveals[S[i].reveal]; if(RS[i]==null) RS[i]=0;
+  steps.forEach(function(rects,k){ rects.forEach(function(r){ var m=document.createElement('div'); m.className='mask'+(k<RS[i]?' gone':''); m.setAttribute('data-step',k);
+    m.style.cssText='left:'+r[0]+'px;top:'+r[1]+'px;width:'+r[2]+'px;height:'+r[3]+'px'; stage.appendChild(m); masks.push(m); }); });
+}
+function clearMasks(){ masks.forEach(function(m){m.remove()}); masks=[]; }
+// 下一步：翻卡頁先依序翻開卡片，全部翻開後才換頁（簡報筆可直接使用）
+function next(){
+  if(S[cur].reveal && RS[cur] < DECK.reveals[S[cur].reveal].length){ var k2=RS[cur]++; masks.forEach(function(m){ if(+m.getAttribute('data-step')===k2) m.classList.add('gone'); }); return; }
+  if(S[cur].flip && flipEl){ var k=FS[cur].indexOf(false); if(k>-1){ FS[cur][k]=true; paintFlip(cur); return; } }
+  show(cur+1);
+}
+
+function show(i,silent){
+  cur = clamp(i);
+  var s = S[cur];
+  var from = prevShown; prevShown = cur;
+  if(flipEl && !s.flip){ flipEl.remove(); flipEl=null; }
+  clearMasks();
+  if(s.reveal){ if(from!==null && from<cur) RS[cur]=0; else if(from!==null && from>cur) RS[cur]=DECK.reveals[s.reveal].length; }
+  if(s.poll){ buildPoll(s.poll,cur); img.classList.add('hidden'); pollLoop(true); }
+  else { if(pollEl){ pollEl.remove(); pollEl=null; } curPoll=null; pollLoop(false);
+    if(s.flip){ if(from!==null && from<cur) FS[cur]=null;   // 從前面翻過來：卡片重新蓋上
+      buildFlip(cur); if(DECK.flips[s.flip].overlay){ img.classList.remove('hidden'); img.src=s.img; } else img.classList.add('hidden'); }
+    else { img.classList.remove('hidden'); img.src=s.img; if(s.reveal) buildReveal(cur); } }
+  stage.setAttribute('aria-label','第 '+(cur+1)+' 頁，共 '+N+' 頁');
+  document.getElementById('hPos').textContent = label(cur);
+  if(location.hash!=='#'+(cur+1)) history.replaceState(null,'',location.pathname+location.search+'#'+(cur+1));
+  [cur+1,cur+2,cur-1].forEach(function(j){ if(j>=0&&j<N&&S[j].img){ var p=new Image(); p.src=S[j].img; } });
+  if(!silent && chan) chan.postMessage({go:cur,from:'m'});
+}
+if(chan) chan.onmessage=function(e){ if(!e.data) return; if(typeof e.data.go==='number'&&e.data.from!=='m') show(e.data.go,true); if(e.data.hello) chan.postMessage({go:cur,from:'m'}); };
+addEventListener('hashchange',function(){ var n=fromHash(); if(n!==cur) show(n); });
+
+var typed='';
+document.addEventListener('keydown',function(e){
+  if(e.ctrlKey||e.metaKey||e.altKey) return;
+  var k=e.key;
+  if(k==='ArrowRight'||k==='PageDown'||k===' '||k==='Enter'&&!typed){e.preventDefault();next()}
+  else if(k==='ArrowLeft'||k==='PageUp'||k==='Backspace'){e.preventDefault();show(cur-1)}
+  else if(k==='Home'){show(0)} else if(k==='End'){show(N-1)}
+  else if(k==='f'||k==='F'){full()} else if(k==='n'||k==='N'){openNotes()}
+  else if(/^[0-9]$/.test(k)){typed+=k; clearTimeout(document._t); document._t=setTimeout(function(){typed=''},1500)}
+  else if(k==='Enter'&&typed){show(parseInt(typed,10)-1);typed=''}
+});
+stage.addEventListener('click',function(e){ var r=stage.getBoundingClientRect(); if((e.clientX-r.left)/r.width < 0.3) show(cur-1); else next(); });
+var hudT; document.addEventListener('mousemove',function(){ document.body.classList.add('show-hud'); clearTimeout(hudT); hudT=setTimeout(function(){document.body.classList.remove('show-hud')},1800); });
+function full(){ var d=document; if(d.fullscreenElement) d.exitFullscreen(); else if(d.documentElement.requestFullscreen) d.documentElement.requestFullscreen().catch(function(){}); }
+function openNotes(){ var u=location.pathname+'?presenter=1'+location.hash; window.open(u,'deck-presenter','width=1100,height=760'); }
+document.getElementById('hPrev').onclick=function(){show(cur-1)}; document.getElementById('hNext').onclick=function(){next()};
+document.getElementById('hFull').onclick=full; document.getElementById('hNotes').onclick=openNotes;
+var tx=null; stage.addEventListener('touchstart',function(e){tx=e.touches[0].clientX},{passive:true});
+stage.addEventListener('touchend',function(e){ if(tx===null) return; var dx=e.changedTouches[0].clientX-tx; tx=null; if(Math.abs(dx)>50){ e.preventDefault(); if(dx<0) next(); else show(cur-1); } });
+show(cur,true);
+})();
+</script>
+</body>
+</html>
